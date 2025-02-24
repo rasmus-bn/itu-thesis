@@ -41,17 +41,15 @@ class Box(IGameObject, BoxProps):
         IGameObject.__init__(self, self.body, self.shape)
 
     def draw(self, surface):
-        x, y = pymunk_to_pygame_point(self.body.position, surface.get_height())
-        pygame.draw.rect(
-            surface,
-            self.color,
-            (
-                int(x - self.width / 2),
-                int(y - self.height / 2),
-                int(self.width),
-                int(self.height),
-            ),
-        )
+        # Calculate the vertices of the rotated box
+        vertices = self.shape.get_vertices()
+        points = []
+        for vertex in vertices:
+            rotated_point = self.body.local_to_world(vertex)
+            points.append(pymunk_to_pygame_point(rotated_point, surface.get_height()))
+
+        # Draw the polygon
+        pygame.draw.polygon(surface, self.color, points)
 
 
 @dataclass

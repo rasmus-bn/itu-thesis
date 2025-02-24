@@ -19,7 +19,7 @@ sim.add_game_object(circle)
 
 # Create additional 5 random boxes
 padding = 20
-for _ in range(1000):
+for _ in range(200):
     x = random.randint(padding, size_x - padding)
     y = random.randint(padding, size_y - padding)
     width = random.randint(5, padding)
