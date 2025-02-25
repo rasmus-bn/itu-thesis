@@ -1,32 +1,63 @@
 import pymunk
 import random
-from engine.objects import Box, BoxProps, Circle, CircleProps
-from engine.simulation import SimulationBase, SimulationProps
+from engine.objects import Box, Circle
+from engine.robot import RobotBase
+from engine.simulation import SimulationBase
 
 
-box = Box(BoxProps(x=200, y=500, width=50, height=50, color=(255, 0, 0)))
-box2 = Box(BoxProps(x=230, y=550, width=25, height=25, color=(0, 255, 0)))
+class RotatingRobot(RobotBase):
+    def controller_update(self):
+        self.set_motor_values(-1, 1)
+
+
+class RotatingBox(Box):
+    def update(self):
+        force = 100000
+        self.body.apply_force_at_local_point((0, force), self.left)
+        self.body.apply_force_at_local_point((0, -force), self.right)
+
 
 size_x = 1280
 size_y = 720
 
-sim = SimulationBase(SimulationProps(pixels_x=size_x, pixels_y=size_y))
+sim = SimulationBase(pixels_x=size_x, pixels_y=size_y)
+
+box = Box(x=200, y=500, width=50, height=50, color=(255, 0, 0))
+box2 = Box(x=230, y=550, width=25, height=25, color=(0, 255, 0))
 sim.add_game_object(box)
 sim.add_game_object(box2)
 
-circle = Circle(CircleProps(x=300, y=500, radius=25, color=(0, 0, 255)))
+
+robot = RotatingRobot(battery_capacity=1000, motor_strength=1000, position=(100, 100))
+sim.add_game_object(robot)
+
+circle = Circle(x=300, y=500, radius=25, color=(0, 0, 255))
 sim.add_game_object(circle)
+
+
+# Create 5 random robots
+for _ in range(50):
+    x = random.randint(0, size_x)
+    y = random.randint(0, size_y)
+    battery_capacity = random.randint(100, 1000)
+    motor_strength = random.randint(100, 1000)
+    robot = RobotBase(battery_capacity, motor_strength, position=(x, y))
+    sim.add_game_object(robot)
+    motor_left = random.uniform(0, 1)
+    motor_right = random.uniform(0, 1)
+    robot.set_motor_values(motor_left, motor_right)
+
 
 # Create additional 5 random boxes
 padding = 20
-for _ in range(200):
-    x = random.randint(padding, size_x - padding)
-    y = random.randint(padding, size_y - padding)
-    width = random.randint(5, padding)
-    height = random.randint(5, padding)
-    color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-    box = Box(BoxProps(x=x, y=y, width=width, height=height, color=color))
-    sim.add_game_object(box)
+# for _ in range(1000):
+#     x = random.randint(padding, size_x - padding)
+#     y = random.randint(padding, size_y - padding)
+#     width = random.randint(5, padding)
+#     height = random.randint(5, padding)
+#     color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+#     box = Box(x=x, y=y, width=width, height=height, color=color)
+#     sim.add_game_object(box)
 
 seg_body = pymunk.Body(body_type=pymunk.Body.STATIC)
 seg = pymunk.Segment(

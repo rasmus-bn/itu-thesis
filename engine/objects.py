@@ -3,15 +3,19 @@ from pygame import Surface
 import pygame
 import pymunk
 
+from engine.helpers import pymunk_to_pygame_point
 
-def pymunk_to_pygame_point(point: tuple, pixel_height):
-    return int(point[0]), pixel_height - int(point[1])
+
 
 
 class IGameObject:
-    def __init__(self, bode: pymunk.Body, shape: pymunk.Shape):
-        self.body = bode
+    def __init__(self, body: pymunk.Body, shape: pymunk.Shape):
+        self.body = body
         self.shape = shape
+
+    @property
+    def has_update(self):
+        return getattr(self.__class__, "update") is not getattr(IGameObject, "update")
 
     def update(self):
         pass
@@ -21,7 +25,7 @@ class IGameObject:
 
 
 @dataclass
-class BoxProps:
+class Box(IGameObject):
     x: int = 0
     y: int = 0
     width: int = 10
@@ -29,16 +33,16 @@ class BoxProps:
     color: tuple = (255, 255, 255)
     density: int = 1
 
-
-class Box(IGameObject, BoxProps):
-    def __init__(self, props: BoxProps):
-        BoxProps.__init__(self, **props.__dict__)
+    def __post_init__(self):
         self.body = pymunk.Body()
         self.body.position = (self.x, self.y)
-        # self.body = pymunk.Body(self.mass, pymunk.moment_for_box(self.mass, (self.width, self.height)))
         self.shape = pymunk.Poly.create_box(self.body, (self.width, self.height))
         self.shape.density = self.density
         IGameObject.__init__(self, self.body, self.shape)
+        self.top = (0, self.height / 2)
+        self.bottom = (0, self.height / 2)
+        self.left = (-self.width / 2, 0)
+        self.right = (self.width / 2, 0)
 
     def draw(self, surface):
         # Calculate the vertices of the rotated box
@@ -46,24 +50,21 @@ class Box(IGameObject, BoxProps):
         points = []
         for vertex in vertices:
             rotated_point = self.body.local_to_world(vertex)
-            points.append(pymunk_to_pygame_point(rotated_point, surface.get_height()))
+            points.append(pymunk_to_pygame_point(rotated_point, surface))
 
         # Draw the polygon
         pygame.draw.polygon(surface, self.color, points)
 
 
 @dataclass
-class CircleProps:
+class Circle(IGameObject):
     x: int = 0
     y: int = 0
     radius: int = 10
     color: tuple = (255, 255, 255)
     density: int = 1
 
-
-class Circle(IGameObject, CircleProps):
-    def __init__(self, props: CircleProps):
-        CircleProps.__init__(self, **props.__dict__)
+    def __post_init__(self):
         self.body = pymunk.Body()
         self.body.position = (self.x, self.y)
         self.shape = pymunk.Circle(self.body, self.radius)
@@ -71,7 +72,7 @@ class Circle(IGameObject, CircleProps):
         IGameObject.__init__(self, self.body, self.shape)
 
     def draw(self, surface):
-        x, y = pymunk_to_pygame_point(self.body.position, surface.get_height())
+        x, y = pymunk_to_pygame_point(self.body.position, surface)
         pygame.draw.circle(
             surface,
             self.color,

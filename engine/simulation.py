@@ -6,25 +6,25 @@ from engine.objects import IGameObject
 
 
 @dataclass
-class SimulationProps:
+class SimulationBase:
     world_scale: int = 10
     fps: int = 60
     enable_display: bool = True
     enable_realtime: bool = True
     pixels_x: int = 640
     pixels_y: int = 480
+    background_color: tuple = (100, 100, 100)
 
-
-class SimulationBase(SimulationProps):
-    def __init__(self, props: SimulationProps):
-        super().__init__(**props.__dict__)
+    def __post_init__(self):
         self._game_objects: IGameObject = []
+        self._logic_objects = None
 
         # Physics
         self.delta_time = 1 / self.fps
         self.delta_time_alert = self.delta_time * 1.2
         self.space = pymunk.Space()
-        self.space.gravity = (0, -100)
+        # How much energy is lost over time
+        self.space.damping = 0.50
 
         # Visualization
         self._display = None
@@ -40,6 +40,7 @@ class SimulationBase(SimulationProps):
             pygame.quit()
 
     def run(self):
+        self._logic_objects = [go for go in self._game_objects if go.has_update]
         last_time = pygame.time.get_ticks()
         while True:
             actual_delta_time = (pygame.time.get_ticks() - last_time) / 1000
@@ -72,12 +73,12 @@ class SimulationBase(SimulationProps):
 
     def _update_logic(self):
         self.update()
-        for obj in self._game_objects:
+        for obj in self._logic_objects:
             obj.update()
 
     def _update_visuals(self):
         if self.enable_display:
-            self._display.fill((0, 0, 0))
+            self._display.fill(self.background_color)
             for obj in self._game_objects:
                 obj.draw(self._display)
 
@@ -90,5 +91,5 @@ class SimulationBase(SimulationProps):
 
 
 if __name__ == "__main__":
-    sim = SimulationBase(SimulationProps())
+    sim = SimulationBase()
     sim.run()
