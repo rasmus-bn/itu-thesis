@@ -1,3 +1,4 @@
+import math
 import pymunk
 import random
 from engine.objects import Box, Circle
@@ -28,8 +29,8 @@ sim.add_game_object(box)
 sim.add_game_object(box2)
 
 
-robot = RotatingRobot(battery_capacity=1000, motor_strength=1000, position=(100, 100))
-sim.add_game_object(robot)
+# robot = RotatingRobot(battery_capacity=1000, motor_strength=1000, position=(100, 100))
+# sim.add_game_object(robot)
 
 circle = Circle(x=300, y=500, radius=25, color=(0, 0, 255))
 sim.add_game_object(circle)
@@ -39,12 +40,13 @@ sim.add_game_object(circle)
 for _ in range(50):
     x = random.randint(0, size_x)
     y = random.randint(0, size_y)
-    battery_capacity = random.randint(100, 1000)
-    motor_strength = random.randint(100, 1000)
-    robot = RobotBase(battery_capacity, motor_strength, position=(x, y))
+    angle = random.uniform(0, 2 * math.pi)
+    battery_capacity = random.randint(10, 1000)
+    motor_strength = random.randint(10, 1000)
+    robot = RobotBase(battery_capacity, motor_strength, position=(x, y), angle=angle)
     sim.add_game_object(robot)
-    motor_left = random.uniform(0, 1)
-    motor_right = random.uniform(0, 1)
+    motor_left = random.uniform(-1, 1)
+    motor_right = random.uniform(-1, 1)
     robot.set_motor_values(motor_left, motor_right)
 
 

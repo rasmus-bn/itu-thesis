@@ -28,6 +28,7 @@ class IGameObject:
 class Box(IGameObject):
     x: int = 0
     y: int = 0
+    angle: float = 0
     width: int = 10
     height: int = 10
     color: tuple = (255, 255, 255)
@@ -36,6 +37,7 @@ class Box(IGameObject):
     def __post_init__(self):
         self.body = pymunk.Body()
         self.body.position = (self.x, self.y)
+        self.body.angle = self.angle
         self.shape = pymunk.Poly.create_box(self.body, (self.width, self.height))
         self.shape.density = self.density
         IGameObject.__init__(self, self.body, self.shape)
