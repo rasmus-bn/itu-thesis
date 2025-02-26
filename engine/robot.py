@@ -28,6 +28,13 @@ class RobotBase(Box):
         self.battery_capacity = battery_capacity
         self.battery_left = battery_capacity
         self.motor_strength = motor_strength
+        self.up_color = color or (255, 0, 0)
+        die_color_scaler = 0.3
+        self.down_color = (
+            max(min(int(self.up_color[0] * die_color_scaler), 255), 0),
+            max(min(int(self.up_color[1] * die_color_scaler), 255), 0),
+            max(min(int(self.up_color[2] * die_color_scaler), 255), 0),
+        )
 
         self.size = self._calc_robot_size()
         self.width = math.sqrt(self.size)
@@ -39,7 +46,7 @@ class RobotBase(Box):
             angle=angle,
             width=self.width,
             height=self.width,
-            color=color or (255, 0, 0),
+            color=self.up_color,
             density=self._calc_robot_density(),
         )
 
@@ -102,7 +109,7 @@ class RobotBase(Box):
             self.battery_left = 0
             self._force_left = 0
             self._force_right = 0
-            print("Battery depleted")
+            self.color = self.down_color
 
         self.body.apply_force_at_local_point((0, self._force_left), self.left)
         self.body.apply_force_at_local_point((0, self._force_right), self.right)

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from time import time
 import pygame
 import pymunk
 
@@ -14,6 +15,10 @@ class SimulationBase:
     pixels_x: int = 640
     pixels_y: int = 480
     background_color: tuple = (100, 100, 100)
+    frame_count: int = 0
+    start_time: float = None
+    end_time: float = None
+    run_time: float = None
 
     def __post_init__(self):
         self._game_objects: IGameObject = []
@@ -29,18 +34,29 @@ class SimulationBase:
         # Visualization
         self._display = None
         self._clock = None
+
+    def _start(self):
+        self._logic_objects = [go for go in self._game_objects if go.has_update]
+        self.start_time = time()
+
+        # Visualization
         if self.enable_display:
             pygame.init()
             self._display = pygame.display.set_mode((self.pixels_x, self.pixels_y))
             self._clock = pygame.time.Clock()
 
     def _quit(self):
+        self.end_time = time()
+        run_time = self.end_time - self.start_time
+        expected_time = self.frame_count / self.fps
+        print(f"Ran faster by a factor of {expected_time / run_time}")
+
         # Visualization
         if self.enable_display:
             pygame.quit()
 
     def run(self):
-        self._logic_objects = [go for go in self._game_objects if go.has_update]
+        self._start()
         last_time = pygame.time.get_ticks()
         while True:
             actual_delta_time = (pygame.time.get_ticks() - last_time) / 1000
@@ -49,6 +65,8 @@ class SimulationBase:
                 print(
                     f"Warning: Frame took {actual_delta_time} seconds, expected {self.delta_time}"
                 )
+            self.frame_count += 1
+            print(f"Frame {self.frame_count}")
 
             # Logic
             self._update_logic()
