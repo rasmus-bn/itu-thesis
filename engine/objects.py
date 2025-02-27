@@ -6,8 +6,6 @@ import pymunk
 from engine.helpers import pymunk_to_pygame_point
 
 
-
-
 class IGameObject:
     def __init__(
         self,

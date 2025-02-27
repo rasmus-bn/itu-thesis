@@ -37,7 +37,7 @@ class RotatingRobot(RobotBase):
 
 
 robot = RotatingRobot(
-    battery_capacity=1000, motor_strength=10, position=(200, 400), angle=0
+    battery_volume=1000, motor_volume=10, position=(200, 400), angle=0
 )
 sim.add_game_object(robot)
 
@@ -47,7 +47,7 @@ sim.add_game_object(circle)
 
 # Create 5 random robots
 MAX_SIZE = 500
-for _ in range(500):
+for _ in range(10):
     x = random.randint(0, size_x)
     y = random.randint(0, size_y)
     angle = random.uniform(0, 2 * math.pi)
