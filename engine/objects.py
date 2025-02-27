@@ -9,9 +9,21 @@ from engine.helpers import pymunk_to_pygame_point
 
 
 class IGameObject:
-    def __init__(self, body: pymunk.Body, shape: pymunk.Shape):
+    def __init__(
+        self,
+        body: pymunk.Body,
+        shape: pymunk.Shape,
+        density: float = 1,
+        virtual_height: float = 1,
+    ):
         self.body = body
         self.shape = shape
+        self.density = density
+        self.virtual_height = virtual_height
+
+    @property
+    def density_3d(self):
+        return self.density * self.virtual_height
 
     @property
     def has_update(self):
@@ -30,19 +42,26 @@ class Box(IGameObject):
     y: int = 0
     angle: float = 0
     width: int = 10
-    height: int = 10
+    length: int = 10
     color: tuple = (255, 255, 255)
     density: int = 1
+    virtual_height: int = 1
 
     def __post_init__(self):
         self.body = pymunk.Body()
         self.body.position = (self.x, self.y)
         self.body.angle = self.angle
-        self.shape = pymunk.Poly.create_box(self.body, (self.width, self.height))
-        self.shape.density = self.density
-        IGameObject.__init__(self, self.body, self.shape)
-        self.top = (0, self.height / 2)
-        self.bottom = (0, self.height / 2)
+        self.shape = pymunk.Poly.create_box(self.body, (self.width, self.length))
+        IGameObject.__init__(
+            self,
+            body=self.body,
+            shape=self.shape,
+            density=self.density,
+            virtual_height=self.virtual_height,
+        )
+        self.shape.density = self.density_3d
+        self.top = (0, self.length / 2)
+        self.bottom = (0, self.length / 2)
         self.left = (-self.width / 2, 0)
         self.right = (self.width / 2, 0)
 
@@ -65,13 +84,20 @@ class Circle(IGameObject):
     radius: int = 10
     color: tuple = (255, 255, 255)
     density: int = 1
+    virtual_height: int = 1
 
     def __post_init__(self):
         self.body = pymunk.Body()
         self.body.position = (self.x, self.y)
         self.shape = pymunk.Circle(self.body, self.radius)
-        self.shape.density = self.density
-        IGameObject.__init__(self, self.body, self.shape)
+        IGameObject.__init__(
+            self,
+            body=self.body,
+            shape=self.shape,
+            density=self.density,
+            virtual_height=self.virtual_height,
+        )
+        self.shape.density = self.density_3d
 
     def draw(self, surface):
         x, y = pymunk_to_pygame_point(self.body.position, surface)

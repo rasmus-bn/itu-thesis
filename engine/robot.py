@@ -45,7 +45,7 @@ class RobotBase(Box):
             *(position or (0, 0)),
             angle=angle,
             width=self.width,
-            height=self.width,
+            length=self.width,
             color=self.up_color,
             density=self._calc_robot_density(),
         )
