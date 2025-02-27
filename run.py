@@ -8,7 +8,6 @@ from engine.simulation import SimulationBase
 random.seed()
 
 
-
 class RotatingBox(Box):
     def update(self):
         force = 100000
@@ -26,8 +25,8 @@ sim = SimulationBase(
     enable_display=True,
 )
 
-box = Box(x=200, y=500, width=50, height=50, color=(255, 0, 0))
-box2 = Box(x=230, y=550, width=25, height=25, color=(0, 255, 0))
+box = Box(x=200, y=500, width=50, length=50, color=(255, 0, 0))
+box2 = Box(x=230, y=550, width=25, length=25, color=(0, 255, 0))
 sim.add_game_object(box)
 sim.add_game_object(box2)
 
@@ -46,19 +45,19 @@ circle = Circle(x=300, y=500, radius=25, color=(0, 0, 255))
 sim.add_game_object(circle)
 
 
-# # Create 5 random robots
-# MAX_SIZE = 500
-# for _ in range(500):
-#     x = random.randint(0, size_x)
-#     y = random.randint(0, size_y)
-#     angle = random.uniform(0, 2 * math.pi)
-#     battery_capacity = random.randint(10, MAX_SIZE)
-#     motor_strength = random.randint(10, MAX_SIZE)
-#     robot = RobotBase(battery_capacity, motor_strength, position=(x, y), angle=angle)
-#     sim.add_game_object(robot)
-#     motor_left = random.uniform(-1, 1)
-#     motor_right = random.uniform(-1, 1)
-#     robot.set_motor_values(motor_left, motor_right)
+# Create 5 random robots
+MAX_SIZE = 500
+for _ in range(500):
+    x = random.randint(0, size_x)
+    y = random.randint(0, size_y)
+    angle = random.uniform(0, 2 * math.pi)
+    battery_capacity = random.randint(10, MAX_SIZE)
+    motor_strength = random.randint(10, MAX_SIZE)
+    robot = RobotBase(battery_capacity, motor_strength, position=(x, y), angle=angle)
+    sim.add_game_object(robot)
+    motor_left = random.uniform(-1, 1)
+    motor_right = random.uniform(-1, 1)
+    robot.set_motor_values(motor_left, motor_right)
 
 
 # Create additional 5 random boxes
