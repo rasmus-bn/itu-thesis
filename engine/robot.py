@@ -1,4 +1,3 @@
-import math
 import pygame
 from engine.objects import Box
 from engine.helpers import pymunk_to_pygame_point
@@ -19,15 +18,20 @@ MOTOR_POWER_SCALER = 0.001
 class RobotBase(Box):
     def __init__(
         self,
-        battery_capacity: float,
-        motor_strength: float,
+        battery_volume: float,
+        motor_volume: float,
         position: tuple = None,
         angle: float = 0,
         color: tuple = None,
     ):
-        self.battery_capacity = battery_capacity
-        self.battery_left = battery_capacity
-        self.motor_strength = motor_strength
+        self.battery_capacity = battery_volume  # TODO: find proper unit and convertion
+        self.motor_strength = motor_volume  # TODO: find proper unit and convertion
+
+        self.battery_volume = battery_volume
+        self.motor_volume = motor_volume
+
+        # Battery remaining in the robot
+        self.battery_remaining = self.battery_capacity  # TODO: Verify proper unit
         self.up_color = color or (255, 0, 0)
         die_color_scaler = 0.3
         self.down_color = (
@@ -36,18 +40,21 @@ class RobotBase(Box):
             max(min(int(self.up_color[2] * die_color_scaler), 255), 0),
         )
 
-        self.size = self._calc_robot_size()
-        self.width = math.sqrt(self.size)
-        self.weight = self._calc_robot_weight()
+        self.total_volume = self.battery_volume + self.motor_volume
+        # Cube root of the volume (for 3D cube)
+        self.side_length = self.total_volume ** (1 / 3)
+
+        self.mass = self._calc_robot_mass()
 
         # Call the box constructor
         super().__init__(
             *(position or (0, 0)),
             angle=angle,
-            width=self.width,
-            length=self.width,
+            width=self.side_length,
+            length=self.side_length,
             color=self.up_color,
             density=self._calc_robot_density(),
+            virtual_height=self.side_length,
         )
 
         self._left_motor = 0
@@ -103,10 +110,10 @@ class RobotBase(Box):
         self._force_left = self._calc_motor_force(self._left_motor)
         self._force_right = self._calc_motor_force(self._right_motor)
 
-        self.battery_left -= self._calc_power_consumption()
+        self.battery_remaining -= self._calc_power_consumption()
 
-        if self.battery_left <= 0:
-            self.battery_left = 0
+        if self.battery_remaining <= 0:
+            self.battery_remaining = 0
             self._force_left = 0
             self._force_right = 0
             self.color = self.down_color
@@ -117,26 +124,20 @@ class RobotBase(Box):
     def controller_update(self):
         pass
 
-    def _calc_robot_size(self):
-        return (
-            self.battery_capacity * BATTERY_SCALER + self.motor_strength * MOTOR_SCALER
-        ) * SIZE_SCALER
-
-    def _calc_robot_weight(self):
-        return (
-            self.battery_capacity * BATTERY_DENSITY
-            + self.motor_strength * MOTOR_DENSITY
-        ) * WEIGHT_SCALER
+    def _calc_robot_mass(self):
+        return self.battery_volume * BATTERY_DENSITY + self.motor_volume * MOTOR_DENSITY
 
     def _calc_motor_force(self, motor_value: float):
-        return motor_value * self.motor_strength * MOTOR_FORCE_SCALER
+        # TODO: Figure out the proper unit and convertion
+        return motor_value * self.motor_volume * MOTOR_FORCE_SCALER
 
     def _calc_power_consumption(self):
+        # TODO: Figure out the proper unit and convertion
         return (
             (abs(self._left_motor) + abs(self._right_motor))
-            * self.motor_strength
+            * self.motor_volume
             * MOTOR_POWER_SCALER
         )
 
     def _calc_robot_density(self):
-        return self.weight / self.size
+        return self.mass / self.total_volume
