@@ -15,14 +15,14 @@ class RotatingBox(Box):
         self.body.apply_force_at_local_point((0, -force), self.right)
 
 
-size_x = 1280
-size_y = 720
+size_x = 400
+size_y = 300
 
 sim = SimulationBase(
     pixels_x=size_x,
     pixels_y=size_y,
     enable_realtime=False,
-    enable_display=True,
+    enable_display=False,
 )
 
 box = Box(x=200, y=500, width=50, length=50, color=(255, 0, 0))

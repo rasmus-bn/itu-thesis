@@ -35,6 +35,11 @@ class SimulationBase:
         self._display = None
         self._clock = None
 
+        # Scaling
+        SCALE_FACTOR = 3
+        self.HIGH_RES_WIDTH = self.pixels_x * SCALE_FACTOR
+        self.HIGH_RES_HEIGHT = self.pixels_y * SCALE_FACTOR
+
     def _start(self):
         self._logic_objects = [go for go in self._game_objects if go.has_update]
         self.start_time = time()
@@ -42,7 +47,8 @@ class SimulationBase:
         # Visualization
         if self.enable_display:
             pygame.init()
-            self._display = pygame.display.set_mode((self.pixels_x, self.pixels_y))
+            self._display = pygame.Surface((self.HIGH_RES_WIDTH, self.HIGH_RES_HEIGHT))
+            self._actualDisplay = pygame.display.set_mode((self.pixels_x, self.pixels_y))
             self._clock = pygame.time.Clock()
 
     def _quit(self):
@@ -83,8 +89,14 @@ class SimulationBase:
                         return
                 # Update visuals
                 self._update_visuals()
+
+                scaled_surface = pygame.transform.smoothscale(self._display, (self.pixels_x, self.pixels_y))
+
+                self._actualDisplay.blit(scaled_surface, (0, 0))
+
                 # Update the screen
-                pygame.display.update()
+                pygame.display.flip()
+
                 # Sleep to maintain FPS
                 if self.enable_realtime:
                     self._clock.tick(self.fps)
@@ -100,6 +112,8 @@ class SimulationBase:
             for obj in self._game_objects:
                 obj.draw(self._display)
 
+    def update(self):
+        pass
     def update(self):
         pass
 
