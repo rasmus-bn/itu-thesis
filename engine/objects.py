@@ -44,12 +44,14 @@ class Box(IGameObject):
     color: tuple = (255, 255, 255)
     density: int = 1
     virtual_height: int = 1
+    trigger: bool = False
 
     def __post_init__(self):
         self.body = pymunk.Body()
         self.body.position = (self.x, self.y)
         self.body.angle = self.angle
         self.shape = pymunk.Poly.create_box(self.body, (self.width, self.length))
+        self.shape.sensor = self.trigger
         IGameObject.__init__(
             self,
             body=self.body,
