@@ -12,11 +12,9 @@ for each agent (not correct. Each agent has to take a step at a time)
         store r into array of visited points (make a trail/route)
         if sensor <= then
             object_found = true
-            other_agents = check if other agents are at the object
-            agent_push = true/false // true if agent can push object alone or with others, false otherwise
+            agent_push = true/false // true if agent can push object, false otherwise
             while agent_push do
                 turn on light
-                other_agents = check if other agents are at the object
                 agent_push = true/false // true if agent can push object alone or with others, false otherwise
             if other_agents then
                 find best route home between agents
