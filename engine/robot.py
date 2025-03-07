@@ -119,13 +119,18 @@ class RobotBase(Box):
         )
         offset = resource.body.world_to_local(offset_global)
 
-        self._attachment = PinJoint(obj1=self, obj2=resource, obj2_offset=offset)
+        PinJoint(obj1=self, obj2=resource, obj2_offset=offset)
         self.sim.add_constraint(self._attachment)
+
+    def on_constraint_added(self, constraint):
+        self._attachment = constraint
+
+    def on_constraint_removed(self, constraint):
+        self._attachment = None
 
     def detach_from_resource(self):
         if self._attachment:
             self._attachment.destroy()
-            self._attachment = None
 
     def _initialize_ir_sensors(self):
         sensors = []

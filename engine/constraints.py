@@ -22,11 +22,11 @@ class IConstraint:
 
 class PinJoint(IConstraint):
     def __init__(
-        self,
-        obj1: IGameObject,
-        obj2: IGameObject,
-        obj1_offset: tuple[float] = None,
-        obj2_offset: tuple[float] = None,
+            self,
+            obj1: IGameObject,
+            obj2: IGameObject,
+            obj1_offset: tuple[float] = None,
+            obj2_offset: tuple[float] = None,
     ):
         self.obj1: IGameObject = obj1
         self.obj2: IGameObject = obj2
@@ -34,15 +34,17 @@ class PinJoint(IConstraint):
         self.obj2_offset: tuple[float] = obj2_offset or (0, 0)
 
         # Call super constructor
-        IConstraint.__init__(
-            self,
-            pymunk.PinJoint(
+        super().__init__(
+            constraint=pymunk.PinJoint(
                 a=self.obj1.body,
                 b=self.obj2.body,
                 anchor_a=Vec2d(*self.obj1_offset),
                 anchor_b=Vec2d(*self.obj2_offset),
-            ),
+            )
         )
+
+        self.obj1.on_constraint_added(self)
+        self.obj2.on_constraint_added(self)
 
     def draw(self, surface: Surface):
         pygame.draw.line(
@@ -56,3 +58,9 @@ class PinJoint(IConstraint):
             ),
             width=2,
         )
+
+    def destroy(self):
+        self.obj1.on_constraint_removed(self)
+        self.obj2.on_constraint_removed(self)
+        super().destroy()
+

@@ -35,10 +35,11 @@ class Environment:
         homebase_shape, resource_shape = arbiter.shapes  # Get colliding shapes
 
         # Find the resource object that matches the shape
-        resource = next((r for r in self.resources if r.shape == resource_shape), None)
+        resource: Resource = next((r for r in self.resources if r.shape == resource_shape), None)
 
         if resource:
             self.collect_resource(resource)
+            resource.delete_all_constraints()
             self.sim.remove_game_object(resource)
         else:
             print("error: cannot find resource", resource)
@@ -48,8 +49,19 @@ class Environment:
 
 class Resource(Circle):
     def __init__(self, x, y, radius=10, color=(255, 255, 0)):
+        self.constraints = []
         super().__init__(x=x, y=y, radius=radius, color=color)
         self.shape.collision_type = 2  # Set collision type for resource
+
+    def on_constraint_added(self, constraint):
+        self.constraints.append(constraint)
+
+    def on_constraint_removed(self, constraint):
+        self.constraints.remove(constraint)
+
+    def delete_all_constraints(self):
+        for constraint in self.constraints:
+            constraint.destroy()
 
 
 class HomeBase(Box):
