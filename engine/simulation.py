@@ -66,7 +66,7 @@ class SimulationBase:
                     f"Warning: Frame took {actual_delta_time} seconds, expected {self.delta_time}"
                 )
             self.frame_count += 1
-            print(f"Frame {self.frame_count}")
+            # print(f"Frame {self.frame_count}")
 
             # Logic
             self._update_logic()
@@ -106,6 +106,12 @@ class SimulationBase:
     def add_game_object(self, obj: IGameObject):
         self._game_objects.append(obj)
         self.space.add(obj.body, obj.shape)
+
+    def remove_game_object(self, obj: IGameObject):
+        if obj in self._game_objects:
+            self._game_objects.remove(obj)
+            self.space.remove(obj.body, obj.shape)
+            # print(f"🚮 Removed {obj} from simulation.")
 
 
 if __name__ == "__main__":
