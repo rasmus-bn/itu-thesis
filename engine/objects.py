@@ -33,6 +33,9 @@ class IGameObject:
     def draw(self, surface: Surface):
         raise NotImplementedError()
 
+    def distance_to_obj_center(self, obj):
+        return self.body.position.get_distance(obj.body.position)
+
 
 @dataclass
 class Box(IGameObject):

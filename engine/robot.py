@@ -1,6 +1,10 @@
 import pygame
+from engine.constraints import PinJoint
+from engine.environment import Resource
+from engine.gpt_generated.closest_point_on_circle import closest_point_on_circle
 from engine.objects import Box
 from engine.helpers import pymunk_to_pygame_point
+from engine.simulation import SimulationBase
 
 # Used for calculating the size of the robot
 BATTERY_SCALER = 1
@@ -46,6 +50,8 @@ class RobotBase(Box):
 
         self.mass = self._calc_robot_mass()
 
+        self._attachment: PinJoint = None
+
         # Call the box constructor
         super().__init__(
             *(position or (0, 0)),
@@ -74,6 +80,28 @@ class RobotBase(Box):
 
         self._left_motor = left
         self._right_motor = right
+
+    def attach_to_resource(self, sim: SimulationBase, resource: Resource):
+        if self._attachment:
+            if self._attachment.obj2 == resource:
+                return
+            else:
+                self.detach_from_resource()
+        # Calculate the offset from the center of the resource to the edge of the circular resource in the direction of the robot
+        offset_global = closest_point_on_circle(
+            subject_center=self.body.position,
+            circle_center=resource.body.position,
+            circle_radius=resource.radius,
+        )
+        offset = resource.body.world_to_local(offset_global)
+
+        self._attachment = PinJoint(obj1=self, obj2=resource, obj2_offset=offset)
+        sim.add_constraint(self._attachment)
+
+    def detach_from_resource(self):
+        if self._attachment:
+            self._attachment.destroy()
+            self._attachment = None
 
     def draw(self, surface):
         super().draw(surface)
