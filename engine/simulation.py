@@ -31,7 +31,7 @@ class SimulationBase:
         self.delta_time_alert = self.delta_time * 1.2
         self.space = pymunk.Space()
         # How much energy is lost over time
-        self.space.damping = 0.50
+        self.space.damping = 0.01
 
         # Visualization
         self._display = None
@@ -68,7 +68,7 @@ class SimulationBase:
                     f"Warning: Frame took {actual_delta_time} seconds, expected {self.delta_time}"
                 )
             self.frame_count += 1
-            print(f"Frame {self.frame_count}")
+            # print(f"Frame {self.frame_count}")
 
             # Logic
             self._update_logic()
@@ -119,7 +119,12 @@ class SimulationBase:
     def add_constraint(self, constraint: IConstraint):
         self._constraints.append(constraint)
         self.space.add(constraint.constraint)
-        # constraint.add_to_space(self.space)
+
+    def remove_game_object(self, obj: IGameObject):
+        if obj in self._game_objects:
+            self._game_objects.remove(obj)
+            self.space.remove(obj.body, obj.shape)
+            # print(f"🚮 Removed {obj} from simulation.")
 
 
 if __name__ == "__main__":
