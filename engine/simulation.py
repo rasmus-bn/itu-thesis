@@ -95,9 +95,12 @@ class SimulationBase:
         self.update()
         for obj in self._logic_objects:
             obj.update()
+
         for constraint in self._constraints:
             if not constraint.alive:
                 self.space.remove(constraint.constraint)
+
+        self._constraints[:] = [constraint for constraint in self._constraints if constraint.alive]
 
     def _update_visuals(self):
         if self.enable_display:

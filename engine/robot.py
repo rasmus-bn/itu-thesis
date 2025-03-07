@@ -105,13 +105,13 @@ class RobotBase(Box):
         self._left_motor = left
         self._right_motor = right
 
-    def attach_to_resource(self, sim: SimulationBase, resource: Resource):
+    def attach_to_resource(self, resource: Resource):
         if self._attachment:
             if self._attachment.obj2 == resource:
                 return
             else:
                 self.detach_from_resource()
-        # Calculate the offset from the center of the resource to the edge of the circular resource in the direction of the robot
+
         offset_global = closest_point_on_circle(
             subject_center=self.body.position,
             circle_center=resource.body.position,
@@ -120,7 +120,7 @@ class RobotBase(Box):
         offset = resource.body.world_to_local(offset_global)
 
         self._attachment = PinJoint(obj1=self, obj2=resource, obj2_offset=offset)
-        sim.add_constraint(self._attachment)
+        self.sim.add_constraint(self._attachment)
 
     def detach_from_resource(self):
         if self._attachment:
