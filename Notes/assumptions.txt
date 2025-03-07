@@ -7,3 +7,4 @@ Delemination:
 - We do not consider wind and weather
 - Whatever happens inside the home base, we do not care about. The home base manages the objects in an unknown way.
 - We do not consider terrain (maybe we will consider obstacles).
+- 
