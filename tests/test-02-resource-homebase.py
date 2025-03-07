@@ -4,21 +4,15 @@ from engine.environment import Environment
 from engine.robot import RobotBase
 from engine.simulation import SimulationBase
 
+# Settings
 SIZE_X = 1280
 SIZE_Y = 720
+MAX_SIZE = 20000
+ROBOT_COUNT = 100
+RESOURCES_COUNT = 50
 
+# test environment
 sim = SimulationBase(pixels_x=SIZE_X, pixels_y=SIZE_Y, enable_realtime=True, enable_display=True)
-
-
-class RotatingRobot(RobotBase):
-    def controller_update(self):
-        self.set_motor_values(1, 1)
-
-
-# Settings
-MAX_SIZE = 20000; ROBOT_COUNT = 100; RESOURCES_COUNT = 50
-
-# test the environment
 env = Environment(sim)
 env.generate_resources(50)
 

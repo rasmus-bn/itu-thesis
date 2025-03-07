@@ -7,8 +7,8 @@ BATTERY_SCALER = 1
 MOTOR_SCALER = 1
 SIZE_SCALER = 1
 # Used to calculate the weight of the robot
-BATTERY_DENSITY = 1
-MOTOR_DENSITY = 1
+BATTERY_DENSITY = 0.1
+MOTOR_DENSITY = 0.1
 WEIGHT_SCALER = 1
 # Used to calculate the force of the motors and their power consumption
 MOTOR_FORCE_SCALER = 100
