@@ -18,6 +18,7 @@ class IGameObject:
         self.shape = shape
         self.density = density
         self.virtual_height = virtual_height
+        self.sim = None
 
     @property
     def density_3d(self):
@@ -48,6 +49,7 @@ class Box(IGameObject):
 
     def __post_init__(self):
         self.body = pymunk.Body()
+        self.body.gameobject = self
         self.body.position = (self.x, self.y)
         self.body.angle = self.angle
         self.shape = pymunk.Poly.create_box(self.body, (self.width, self.length))
@@ -88,6 +90,7 @@ class Circle(IGameObject):
 
     def __post_init__(self):
         self.body = pymunk.Body()
+        self.body.gameobject = self
         self.body.position = (self.x, self.y)
         self.shape = pymunk.Circle(self.body, self.radius)
         IGameObject.__init__(

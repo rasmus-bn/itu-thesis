@@ -104,6 +104,7 @@ class SimulationBase:
         pass
 
     def add_game_object(self, obj: IGameObject):
+        obj.sim = self
         self._game_objects.append(obj)
         self.space.add(obj.body, obj.shape)
 
