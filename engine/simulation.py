@@ -3,6 +3,7 @@ from time import time
 import pygame
 import pymunk
 
+from engine.constraints import IConstraint
 from engine.objects import IGameObject
 
 
@@ -23,6 +24,7 @@ class SimulationBase:
     def __post_init__(self):
         self._game_objects: IGameObject = []
         self._logic_objects = None
+        self._constraints: IConstraint = []
 
         # Physics
         self.delta_time = 1 / self.fps
@@ -93,12 +95,19 @@ class SimulationBase:
         self.update()
         for obj in self._logic_objects:
             obj.update()
+        for constraint in self._constraints:
+            if not constraint.alive:
+                self.space.remove(constraint.constraint)
 
     def _update_visuals(self):
         if self.enable_display:
             self._display.fill(self.background_color)
+            # Draw all objects
             for obj in self._game_objects:
                 obj.draw(self._display)
+            # Draw all constraints
+            for constraint in self._constraints:
+                constraint.draw(self._display)
 
     def update(self):
         pass
@@ -106,6 +115,10 @@ class SimulationBase:
     def add_game_object(self, obj: IGameObject):
         self._game_objects.append(obj)
         self.space.add(obj.body, obj.shape)
+
+    def add_constraint(self, constraint: IConstraint):
+        self._constraints.append(constraint)
+        self.space.add(constraint.constraint)
 
     def remove_game_object(self, obj: IGameObject):
         if obj in self._game_objects:
