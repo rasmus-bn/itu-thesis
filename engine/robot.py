@@ -34,7 +34,7 @@ class RobotBase(Box):
         position: tuple = None,
         angle: float = 0,
         color: tuple = None,
-        num_ir_sensors: int = 32,
+        num_ir_sensors: int = 8,
         sensor_range: float = 100.0,
     ):
         self.battery_capacity = battery_volume  # TODO: find proper unit and convertion
