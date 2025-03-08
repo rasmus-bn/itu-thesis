@@ -36,9 +36,9 @@ class ManualRobotBase(RobotBase):
             motor_right -= 0.5
 
         if keys[pygame.K_SPACE]:
-            if self.ir_sensors[2]["gameobject"] is not None:
+            if self.ir_sensors[2].gameobject is not None:
                 self.is_attached = True
-                obj = self.ir_sensors[2]["gameobject"]
+                obj = self.ir_sensors[2].gameobject
                 if isinstance(obj, Resource):
                     self.attach_to_resource(obj)
                     print(f"attached: {obj}")
