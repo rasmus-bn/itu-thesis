@@ -74,6 +74,7 @@ class Box(IGameObject):
         # Calculate the vertices of the rotated box
         vertices = self.shape.get_vertices()
         points = []
+
         for vertex in vertices:
             rotated_point = self.body.local_to_world(vertex)
             points.append(pymunk_to_pygame_point(rotated_point, surface))

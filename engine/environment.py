@@ -14,6 +14,9 @@ class Environment:
         handler = self.sim.space.add_collision_handler(1, 2)
         handler.begin = lambda arbiter, space, data: self.handle_homebase_collision(arbiter, space)
 
+        # Give sim a back reference
+        self.sim.set_environment(self)
+
     def get_homebase(self):
         return self.homebase
 
@@ -65,6 +68,6 @@ class Resource(Circle):
 
 
 class HomeBase(Box):
-    def __init__(self, x, y, width=75, length=75, color=(0, 255, 0)):
+    def __init__(self, x, y, width=200, length=200, color=(0, 255, 0)):
         super().__init__(x=x, y=y, width=width, length=length, color=color, trigger=True)
         self.shape.collision_type = 1  # Set collision type for homebase

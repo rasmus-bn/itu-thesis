@@ -4,6 +4,7 @@ import pygame
 import pymunk
 
 from engine.constraints import IConstraint
+from engine.environment import Environment
 from engine.objects import IGameObject
 
 
@@ -20,6 +21,7 @@ class SimulationBase:
     start_time: float = None
     end_time: float = None
     run_time: float = None
+    environment: Environment = None
 
     def __post_init__(self):
         self._game_objects: IGameObject = []
@@ -129,6 +131,9 @@ class SimulationBase:
             self._game_objects.remove(obj)
             self.space.remove(obj.body, obj.shape)
             # print(f"🚮 Removed {obj} from simulation.")
+
+    def set_environment(self, env: Environment):
+        self.environment = env
 
 
 if __name__ == "__main__":

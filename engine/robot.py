@@ -1,5 +1,8 @@
 from dataclasses import dataclass
 import pygame
+
+from algorithms.control_api import RobotControlAPI
+from algorithms.sensor_api import RobotSensorAPI
 from engine.constraints import PinJoint
 from engine.gpt_generated.closest_point_on_circle import closest_point_on_circle
 from engine.environment import Resource
@@ -33,7 +36,10 @@ class RobotBase(Box):
             color: tuple = None,
             num_ir_sensors: int = 8,
             sensor_range: float = 100.0,
+            controller: any = None,
+            ignore_battery: bool = False
     ):
+        self.ignore_battery = ignore_battery
         self.battery_capacity = battery_volume  # TODO: find proper unit and convertion
         self.motor_strength = motor_volume  # TODO: find proper unit and convertion
 
@@ -56,7 +62,7 @@ class RobotBase(Box):
 
         self.mass = self._calc_robot_mass()
 
-        self._attachment: PinJoint = None
+        self.attachment: PinJoint = None
 
         # Call the box constructor
         super().__init__(
@@ -94,6 +100,15 @@ class RobotBase(Box):
             group=self.robot_group  # Ignores itself
         )
 
+        # Create API objects
+        sensors = RobotSensorAPI(self)
+        controls = RobotControlAPI(self)
+
+        # Assign APIs to the controller
+        self.controller = controller
+        if controller:
+            self.controller.set_apis(sensors, controls)
+
     def set_motor_values(self, left: float, right: float):
         # Clamp the values to -1, 1
         left = max(-1, min(1, left))
@@ -103,8 +118,8 @@ class RobotBase(Box):
         self._right_motor = right
 
     def attach_to_resource(self, resource: Resource):
-        if self._attachment:
-            if self._attachment.obj2 == resource:
+        if self.attachment:
+            if self.attachment.obj2 == resource:
                 return
             else:
                 self.detach_from_resource()
@@ -117,17 +132,17 @@ class RobotBase(Box):
         offset = resource.body.world_to_local(offset_global)
 
         PinJoint(obj1=self, obj2=resource, obj2_offset=offset)
-        self.sim.add_constraint(self._attachment)
+        self.sim.add_constraint(self.attachment)
 
     def on_constraint_added(self, constraint):
-        self._attachment = constraint
+        self.attachment = constraint
 
     def on_constraint_removed(self, constraint):
-        self._attachment = None
+        self.attachment = None
 
     def detach_from_resource(self):
-        if self._attachment:
-            self._attachment.destroy()
+        if self.attachment:
+            self.attachment.destroy()
 
     def _initialize_ir_sensors(self):
         sensors: list[SensorData] = []
@@ -234,18 +249,22 @@ class RobotBase(Box):
 
     def update(self):
         self.update_sensors()
+
+        # todo change
         self.controller_update()
+        if self.controller:
+            self.controller.update()
 
         self._force_left = self._calc_motor_force(self._left_motor)
         self._force_right = self._calc_motor_force(self._right_motor)
 
-        self.battery_remaining -= self._calc_power_consumption()
-
-        if self.battery_remaining <= 0:
-            self.battery_remaining = 0
-            self._force_left = 0
-            self._force_right = 0
-            self.color = self.down_color
+        if not self.ignore_battery:
+            self.battery_remaining -= self._calc_power_consumption()
+            if self.battery_remaining <= 0:
+                self.battery_remaining = 0
+                self._force_left = 0
+                self._force_right = 0
+                self.color = self.down_color
 
         self.body.apply_force_at_local_point((0, self._force_left), self.left)
         self.body.apply_force_at_local_point((0, self._force_right), self.right)
