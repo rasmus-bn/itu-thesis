@@ -3,7 +3,7 @@ from time import time
 import pygame
 import pymunk
 
-from engine.constraints import IConstraint
+from engine.tether import Tether
 from engine.environment import Environment
 from engine.objects import IGameObject
 
@@ -16,7 +16,7 @@ class SimulationBase:
     enable_realtime: bool = True
     pixels_x: int = 640
     pixels_y: int = 480
-    background_color: tuple = (100, 100, 100)
+    background_color: tuple = (20, 20, 20)
     frame_count: int = 0
     start_time: float = None
     end_time: float = None
@@ -26,7 +26,7 @@ class SimulationBase:
     def __post_init__(self):
         self._game_objects: IGameObject = []
         self._logic_objects = None
-        self._constraints: IConstraint = []
+        self._tethers: list[Tether] = []
 
         # Physics
         self.delta_time = 1 / self.fps
@@ -98,21 +98,15 @@ class SimulationBase:
         for obj in self._logic_objects:
             obj.update()
 
-        for constraint in self._constraints:
-            if not constraint.alive:
-                self.space.remove(constraint.constraint)
-
-        self._constraints[:] = [constraint for constraint in self._constraints if constraint.alive]
-
     def _update_visuals(self):
         if self.enable_display:
             self._display.fill(self.background_color)
             # Draw all objects
             for obj in self._game_objects:
                 obj.draw(self._display)
-            # Draw all constraints
-            for constraint in self._constraints:
-                constraint.draw(self._display)
+            # Draw all tethers
+            for tether in self._tethers:
+                tether.draw(self._display)
 
     def update(self):
         pass
@@ -122,15 +116,18 @@ class SimulationBase:
         self._game_objects.append(obj)
         self.space.add(obj.body, obj.shape)
 
-    def add_constraint(self, constraint: IConstraint):
-        self._constraints.append(constraint)
-        self.space.add(constraint.constraint)
-
     def remove_game_object(self, obj: IGameObject):
         if obj in self._game_objects:
             self._game_objects.remove(obj)
             self.space.remove(obj.body, obj.shape)
-            # print(f"🚮 Removed {obj} from simulation.")
+
+    def add_tether(self, tether: Tether):
+        self._tethers.append(tether)
+        self.space.add(tether.constraint)
+
+    def remove_tether(self, tether: Tether):
+        self._tethers.remove(tether)
+        self.space.remove(tether.constraint)
 
     def set_environment(self, env: Environment):
         self.environment = env

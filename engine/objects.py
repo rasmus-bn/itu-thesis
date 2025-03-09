@@ -1,9 +1,12 @@
+import math
 from dataclasses import dataclass
 from pygame import Surface
 import pygame
 import pymunk
 
 from engine.helpers import pymunk_to_pygame_point
+from typing import TYPE_CHECKING
+if TYPE_CHECKING: from engine.simulation import SimulationBase
 
 
 class IGameObject:
@@ -18,7 +21,7 @@ class IGameObject:
         self.shape = shape
         self.density = density
         self.virtual_height = virtual_height
-        self.sim = None
+        self.sim: SimulationBase = None
 
     @property
     def density_3d(self):

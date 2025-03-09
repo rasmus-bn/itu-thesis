@@ -18,13 +18,10 @@ class RandomSearchController(BaseController):
         self.start_time = time.time()
         self.search_duration = 1  # seconds
         self.random_direction = (0, 0)
-        print("ok")
 
     def update(self):
-        print(self.sensors.get_robot_angle())
         if not self.sensors or not self.controls:
-            print("bad thing")
-            return
+            raise RuntimeError("sensors or controls not available")
 
         if self.state == RobotState.SEARCHING:
             self.search()
@@ -35,7 +32,7 @@ class RandomSearchController(BaseController):
         # Check for resources in lidar
         lidar_data = self.sensors.get_lidar()
         for sensor in lidar_data:
-            if isinstance(sensor.gameobject, Resource) and len(sensor.gameobject.constraints) == 0:
+            if isinstance(sensor.gameobject, Resource): # and len(sensor.gameobject.constraints) == 0
                 self.controls.attach_to_resource(sensor.gameobject)
                 self.state = RobotState.RETRIEVING
                 return
@@ -43,7 +40,7 @@ class RandomSearchController(BaseController):
         # If the robot just started searching or finished a movement cycle
         if time.time() - self.start_time > self.search_duration:
             self.start_time = time.time()
-            self.random_direction = (random.uniform(0, 1), random.uniform(0, 1))
+            self.random_direction = (random.uniform(0.5, 1), random.uniform(0.5, 1))
 
         # Move in the random direction
         left_motor, right_motor = self.random_direction

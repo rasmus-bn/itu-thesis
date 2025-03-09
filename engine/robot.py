@@ -3,7 +3,7 @@ import pygame
 
 from algorithms.control_api import RobotControlAPI
 from algorithms.sensor_api import RobotSensorAPI
-from engine.constraints import PinJoint
+from engine.tether import Tether
 from engine.gpt_generated.closest_point_on_circle import closest_point_on_circle
 from engine.environment import Resource
 from engine.objects import Box, IGameObject
@@ -35,7 +35,7 @@ class RobotBase(Box):
             angle: float = 0,
             color: tuple = None,
             num_ir_sensors: int = 8,
-            sensor_range: float = 100.0,
+            sensor_range: float = 50.0,
             controller: any = None,
             ignore_battery: bool = False
     ):
@@ -62,7 +62,7 @@ class RobotBase(Box):
 
         self.mass = self._calc_robot_mass()
 
-        self.attachment: PinJoint = None
+        self.tether: Tether | None = None
 
         # Call the box constructor
         super().__init__(
@@ -118,8 +118,8 @@ class RobotBase(Box):
         self._right_motor = right
 
     def attach_to_resource(self, resource: Resource):
-        if self.attachment:
-            if self.attachment.obj2 == resource:
+        if self.tether:
+            if self.tether.resource == resource:
                 return
             else:
                 self.detach_from_resource()
@@ -131,18 +131,14 @@ class RobotBase(Box):
         )
         offset = resource.body.world_to_local(offset_global)
 
-        PinJoint(obj1=self, obj2=resource, obj2_offset=offset)
-        self.sim.add_constraint(self.attachment)
-
-    def on_constraint_added(self, constraint):
-        self.attachment = constraint
-
-    def on_constraint_removed(self, constraint):
-        self.attachment = None
+        self.tether = Tether(robot=self, resource=resource, resource_offset=offset)
+        self.sim.add_tether(self.tether)
+        print(f"attached: {resource}")
 
     def detach_from_resource(self):
-        if self.attachment:
-            self.attachment.destroy()
+        if self.tether:
+            self.sim.remove_tether(self.tether)
+            self.tether = None
 
     def _initialize_ir_sensors(self):
         sensors: list[SensorData] = []
@@ -245,7 +241,7 @@ class RobotBase(Box):
         )
 
         # Draw sensors
-        self.draw_sensors(surface)
+        # self.draw_sensors(surface)
 
     def update(self):
         self.update_sensors()

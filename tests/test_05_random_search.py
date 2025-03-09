@@ -10,13 +10,14 @@ from engine.simulation import SimulationBase
 SIZE_X = 1280
 SIZE_Y = 720
 MAX_SIZE = 20000
-ROBOT_COUNT = 5
-RESOURCES_COUNT = 20
+ROBOT_COUNT = 20
+RESOURCES_COUNT = 300
+RESOURCES_SIZE = 10
 
 # test environment
 sim = SimulationBase(pixels_x=SIZE_X, pixels_y=SIZE_Y, enable_realtime=True, enable_display=True)
 env = Environment(sim)
-env.generate_resources(RESOURCES_COUNT)
+env.generate_resources(RESOURCES_COUNT, radius=RESOURCES_SIZE)
 
 # Create 5 random robots
 for _ in range(ROBOT_COUNT):

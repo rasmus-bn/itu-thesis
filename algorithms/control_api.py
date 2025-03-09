@@ -18,4 +18,4 @@ class RobotControlAPI:
         self._robot.detach_from_resource()
 
     def is_attached(self):
-        return self._robot.attachment is not None
+        return self._robot.tether is not None
