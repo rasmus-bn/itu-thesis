@@ -1,31 +1,62 @@
 Random research and FA algorithm (collision not computed):
+***Does not handle collision or new computations on best route, when new agents come to push an object that is already being pushed**
 
 initialize map, M
 initialize number, n, of agents
 initialize position of each agent to home position
-max_iteration = set maximum iteration, before agent must return to home base to recharg
-for each agent (not correct. Each agent has to take a step at a time)
-    object_found = false
-    curr_iteration = 0
-    while !object_found or (max_iteration >= curr_iteration) do
-        r = FA or randomly select new position from neighbouring positions (agent can not choose previously visited points) //consider edgecase where it is stuck in a path and can't move forward as it will revisit its previously points
-        store r into array of visited points (make a trail/route)
-        if sensor <= then
-            object_found = true
-            agent_push = true/false // true if agent can push object, false otherwise
-            while agent_push do
-                turn on light
-                agent_push = true/false // true if agent can push object alone or with others, false otherwise
-            if other_agents then
-                find best route home between agents
-                while !home do
-                    push object collectively home
+max_iteration = set maximum iteration, before agent must return to home base to recharge (in case we do not allow robots to die in the field)
+end_condition = set an end goal for the whole colony
+sensor_obj = set sensor value that indicate the agent is close to an object
+object_found[] //indicator for if an agent has found an object
+curr_iteration //Current loop iteration
+route_per_agent[][] //each coordinate a agent moves is stored
+step_counter_per_agent[] //number of steps an agent moves
+best_route[][] //the best route between the agents that collectively transport an object
+best_route_dist[] //the euclidian distance of the best route
+steps_in_best_route[] 
+
+for range(i = 0, n-1) //initialize variables for each agent
+    object_found[i] = false
+    curr_iteration[i] = 0
+    step_counter_per_agent[i] = 0
+
+
+while !end_condition do
+    for range(i = 0, n-1) //for each agent
+        if max_iteration < curr_iteration then
+            break
+        if object_found[i] and steps_in_best_route[i] == 0 then //object has been returned to homebase and agent is ready to explore again
+            object_found[i] = false
+            step_counter_per_agent[i] = 0
+        if object_found[i] then //returning to homebase with object
+            pos = best_route[i][steps_in_best_route[i]-1] //update position of agent and object
+            steps_in_best_route[i] -- //update how many steps are left of the best route for reaching homebase
+        sensor = read sensor value
+        else if sensor <= sensor_obj then //finds object
+            object_found[i] = true
+            route_length = //sum all eclidion distance between all points in route_per_agent[i][..]
+            agent_push = // true if agent can push object, false otherwise
+            if !agent_push do
+                turn_on_light() //call for other agents
             else
-                push object home by route it came from
-        curr_iteration + 1 
-                
+                turn_of_lights()
+                if other_agents then //if there are other agents pushing the object
+                    best_route_dist[i] = compare route_length with the other agents route_length, who are at the object, to find the best route length
+                    best_route[i][..] = best route will then be shared by the agent that has the best route_length
+                    steps_in_best_route[i] = best_route[i].length
+                    pos = best_route[i][steps_in_best_route[i]-1] //update position of agent and object
+                    steps_in_best_route[i] -- //update how many steps are left of the best route for reaching homebase
+                else
+                    steps_in_best_route[i] = step_counter_per_agent[i]
+                    pos = route_per_agent[i][steps_in_best_route[i]-1] //update position of agent and object
+                    steps_in_best_route[i] -- //update how many steps are left of the best route for reaching homebase
+        else //explores
+            pos = FA or randomly select new position from neighbouring positions (agent can not choose previously visited points) //consider edgecase where it is stuck in a path and can't move forward as it will revisit its previously points
+            route_per_agent[step_counter_per_agent[i]] = pos //store pos into array of visited points (make a trail/route)
+            step_counter_per_agent[i] ++
+        move(pos) //move the agent and possibly object
+    curr_iteration ++ 
             
-        
             
 
 
