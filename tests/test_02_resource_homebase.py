@@ -8,7 +8,7 @@ from engine.simulation import SimulationBase
 SIZE_X = 1280
 SIZE_Y = 720
 MAX_SIZE = 20000
-ROBOT_COUNT = 100
+ROBOT_COUNT = 10
 RESOURCES_COUNT = 50
 
 # test environment

@@ -1,15 +1,15 @@
+from dataclasses import dataclass
 import pygame
-from engine.constraints import PinJoint
-from engine.environment import Resource
-from engine.gpt_generated.closest_point_on_circle import closest_point_on_circle
-from pygame.examples.moveit import GameObject
 
+from algorithms.control_api import RobotControlAPI
+from algorithms.sensor_api import RobotSensorAPI
+from engine.tether import Tether
+from engine.gpt_generated.closest_point_on_circle import closest_point_on_circle
 from engine.environment import Resource
-from engine.objects import Box
+from engine.objects import Box, IGameObject
 from engine.helpers import pymunk_to_pygame_point
 import numpy as np
 import pymunk
-from engine.simulation import SimulationBase
 
 # Used for calculating the size of the robot
 BATTERY_SCALER = 1
@@ -28,15 +28,18 @@ class RobotBase(Box):
     _robot_counter = 1  # Keeps track of unique robot IDs
 
     def __init__(
-        self,
-        battery_volume: float,
-        motor_volume: float,
-        position: tuple = None,
-        angle: float = 0,
-        color: tuple = None,
-        num_ir_sensors: int = 8,
-        sensor_range: float = 100.0,
+            self,
+            battery_volume: float,
+            motor_volume: float,
+            position: tuple = None,
+            angle: float = 0,
+            color: tuple = None,
+            num_ir_sensors: int = 8,
+            sensor_range: float = 50.0,
+            controller: any = None,
+            ignore_battery: bool = False
     ):
+        self.ignore_battery = ignore_battery
         self.battery_capacity = battery_volume  # TODO: find proper unit and convertion
         self.motor_strength = motor_volume  # TODO: find proper unit and convertion
 
@@ -59,7 +62,7 @@ class RobotBase(Box):
 
         self.mass = self._calc_robot_mass()
 
-        self._attachment: PinJoint = None
+        self.tether: Tether | None = None
 
         # Call the box constructor
         super().__init__(
@@ -85,7 +88,7 @@ class RobotBase(Box):
         # Sensor setup
         self.num_ir_sensors = num_ir_sensors
         self.sensor_range = sensor_range
-        self.ir_sensors = self._initialize_ir_sensors()
+        self.ir_sensors: list[SensorData] = self._initialize_ir_sensors()
 
         # Set up the shape filter (ignores itself but detects other objects)
         self.robot_group = RobotBase._robot_counter
@@ -97,6 +100,15 @@ class RobotBase(Box):
             group=self.robot_group  # Ignores itself
         )
 
+        # Create API objects
+        sensors = RobotSensorAPI(self)
+        controls = RobotControlAPI(self)
+
+        # Assign APIs to the controller
+        self.controller = controller
+        if controller:
+            self.controller.set_apis(sensors, controls)
+
     def set_motor_values(self, left: float, right: float):
         # Clamp the values to -1, 1
         left = max(-1, min(1, left))
@@ -106,8 +118,8 @@ class RobotBase(Box):
         self._right_motor = right
 
     def attach_to_resource(self, resource: Resource):
-        if self._attachment:
-            if self._attachment.obj2 == resource:
+        if self.tether:
+            if self.tether.resource == resource:
                 return
             else:
                 self.detach_from_resource()
@@ -119,31 +131,31 @@ class RobotBase(Box):
         )
         offset = resource.body.world_to_local(offset_global)
 
-        self._attachment = PinJoint(obj1=self, obj2=resource, obj2_offset=offset)
-        self.sim.add_constraint(self._attachment)
+        self.tether = Tether(robot=self, resource=resource, resource_offset=offset)
+        self.sim.add_tether(self.tether)
+        print(f"attached: {resource}")
 
     def detach_from_resource(self):
-        if self._attachment:
-            self._attachment.destroy()
-            self._attachment = None
+        if self.tether:
+            self.sim.remove_tether(self.tether)
+            self.tether = None
 
     def _initialize_ir_sensors(self):
-        sensors = []
+        sensors: list[SensorData] = []
         angle_step = 2 * np.pi / self.num_ir_sensors  # Distribute sensors equally
 
         for i in range(self.num_ir_sensors):
             angle = self.body.angle + (i * angle_step)  # Compute sensor angle
-            sensors.append({"angle": angle, "distance": self.sensor_range, "gameobject": None})  # Default to max range
+            sensors.append(SensorData(angle=angle, distance=self.sensor_range, gameobject=None))
 
-        print(sensors)
         return sensors
 
     def update_sensors(self):
         for sensor in self.ir_sensors:
             sensor_pos = self.body.position  # Robot's center
             direction = (
-                np.cos(self.body.angle + sensor["angle"]),
-                np.sin(self.body.angle + sensor["angle"])
+                np.cos(self.body.angle + sensor.angle),
+                np.sin(self.body.angle + sensor.angle)
             )
 
             # Raycast in sensor direction
@@ -151,39 +163,36 @@ class RobotBase(Box):
             # print(f"using group: {self.robot_group}")
 
             hit = self.sim.space.segment_query_first(
-                sensor_pos, # start of the ray
+                sensor_pos,  # start of the ray
                 (sensor_pos[0] + direction[0] * self.sensor_range,
-                 sensor_pos[1] + direction[1] * self.sensor_range), # end of the ray
+                 sensor_pos[1] + direction[1] * self.sensor_range),  # end of the ray
                 1.0,  # Radius of ray
                 shape_filter=ray_filter
             )
 
             if hit:
-                sensor["distance"] = hit.alpha * self.sensor_range
-                sensor["gameobject"] = hit.shape.body.gameobject
+                sensor.distance = hit.alpha * self.sensor_range
+                sensor.gameobject = hit.shape.body.gameobject
             else:
-                sensor["distance"] = self.sensor_range
-                sensor["gameobject"] = None
+                sensor.distance = self.sensor_range
+                sensor.gameobject = None
 
     def draw_sensors(self, screen):
-        """
-        Draws infrared sensor rays to visualize what the robot is detecting.
-        """
         for sensor in self.ir_sensors:
             sensor_pos = self.body.position  # Robot's center
             direction = (
-                np.cos(self.body.angle + sensor["angle"]),
-                np.sin(self.body.angle + sensor["angle"])
+                np.cos(self.body.angle + sensor.angle),
+                np.sin(self.body.angle + sensor.angle)
             )
 
             # Compute sensor end position
             sensor_end = (
-                sensor_pos[0] + direction[0] * sensor["distance"],
-                sensor_pos[1] + direction[1] * sensor["distance"]
+                sensor_pos[0] + direction[0] * sensor.distance,
+                sensor_pos[1] + direction[1] * sensor.distance
             )
 
             # Choose color: RED if sensor detects an object, GREEN if nothing detected
-            color = (255, 0, 0) if sensor["distance"] < self.sensor_range else (0, 255, 0)
+            color = (255, 0, 0) if sensor.distance < self.sensor_range else (0, 255, 0)
 
             # Convert Pymunk coordinates to Pygame coordinates
             start_pos = (int(sensor_pos[0]), int(sensor_pos[1]))
@@ -195,10 +204,10 @@ class RobotBase(Box):
             # Draw sensor ray
             pygame.draw.line(screen, color, start_pos, end_pos, 2)
 
-            if sensor["gameobject"] is not None:
-                obj = sensor["gameobject"]
+            if sensor.gameobject is not None:
+                obj = sensor.gameobject
                 if isinstance(obj, Resource):
-                    pygame.draw.circle(screen, (200,200,0), end_pos, 10)
+                    pygame.draw.circle(screen, (200, 200, 0), end_pos, 10)
                 if isinstance(obj, RobotBase):
                     pygame.draw.circle(screen, (200, 0, 0), end_pos, 10)
 
@@ -232,22 +241,26 @@ class RobotBase(Box):
         )
 
         # Draw sensors
-        self.draw_sensors(surface)
+        # self.draw_sensors(surface)
 
     def update(self):
         self.update_sensors()
+
+        # todo change
         self.controller_update()
+        if self.controller:
+            self.controller.update()
 
         self._force_left = self._calc_motor_force(self._left_motor)
         self._force_right = self._calc_motor_force(self._right_motor)
 
-        self.battery_remaining -= self._calc_power_consumption()
-
-        if self.battery_remaining <= 0:
-            self.battery_remaining = 0
-            self._force_left = 0
-            self._force_right = 0
-            self.color = self.down_color
+        if not self.ignore_battery:
+            self.battery_remaining -= self._calc_power_consumption()
+            if self.battery_remaining <= 0:
+                self.battery_remaining = 0
+                self._force_left = 0
+                self._force_right = 0
+                self.color = self.down_color
 
         self.body.apply_force_at_local_point((0, self._force_left), self.left)
         self.body.apply_force_at_local_point((0, self._force_right), self.right)
@@ -265,10 +278,17 @@ class RobotBase(Box):
     def _calc_power_consumption(self):
         # TODO: Figure out the proper unit and convertion
         return (
-            (abs(self._left_motor) + abs(self._right_motor))
-            * self.motor_volume
-            * MOTOR_POWER_SCALER
+                (abs(self._left_motor) + abs(self._right_motor))
+                * self.motor_volume
+                * MOTOR_POWER_SCALER
         )
 
     def _calc_robot_density(self):
         return self.mass / self.total_volume
+
+
+@dataclass
+class SensorData:
+    angle: int
+    distance: float
+    gameobject: IGameObject | None
