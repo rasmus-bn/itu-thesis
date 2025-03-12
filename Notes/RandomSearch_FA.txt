@@ -33,7 +33,6 @@ epsilon = 0.1 //range for agent coordinates
                 num_waypoints_left = (waypoint_counter_to_object[i] - waypoint_counter_to_homebase[i])
                 if received_waypoint_counter <= num_waypoints_left 
                     waypoint_counter_to_object[i] = received_waypoint_counter
-                    waypoint_counter_to_homebase[i] = 0
                     route_per_agent[i] = received_route
                     waypoint_counter_to_homebase[i] = 1
                 else
