@@ -9,7 +9,21 @@
       "type": "debugpy",
       "request": "launch",
       "program": "${file}",
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "cwd": "${workspaceFolder}",
+      "terminal.integrated.env.osx": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "terminal.integrated.env.linux": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "terminal.integrated.env.windows": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "python.envFile": "${workspaceFolder}/.env"
     }
   ]
 }
