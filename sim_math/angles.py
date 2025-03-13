@@ -19,6 +19,8 @@ def calc_global_angle(subject_pos, target_pos):
 
 
 def calc_relative_angle(subject_pos, subject_angle, target_pos):
+    """Calculate the relative angle from subject position to target position
+    The relative angle is always between -pi and pi. Left is positive, right is negative"""
     global_angle = calc_global_angle(subject_pos, target_pos)
     adjusted_angle = global_angle - subject_angle
     #
@@ -39,20 +41,8 @@ if __name__ == "__main__":
     print(calc_global_angle((0, 0), (-1, 0)))  # Left
     print(calc_global_angle((0, 0), (0, -1)))  # Down
     print("-------------------")
-    print(calc_relative_angle((0, 0), (1, 0)))  # Right
-    print(calc_relative_angle((0, 0), (0, 1)))  # Up
-    print(calc_relative_angle((0, 0), (-1, 0)))  # Left
-    print(calc_relative_angle((0, 0), (0, -1)))  # Down
-
-    FACING_RIGHT = 0
-    FACING_UP = math.pi / 2
-    FACING_LEFT = math.pi
-    FACING_DOWN = 3 * math.pi / 2
-
-    # def calc_relative_angle(subject_pos, subject_dir, target_pos):
-    #     delta_x = -(subject_pos[0] - target_pos[0])
-    #     delta_y = -(subject_pos[1] - target_pos[1])
-    #     angle = Vec2d(delta_x, delta_y).angle
-    #     return angle - subject_dir
-
-    # print(Vec2d(3, 0).get_angle_between(Vec2d(-1, 0)))
+    dire = math.pi / 2
+    print(calc_relative_angle((0, 0), dire, (1, 0)))  # Right
+    print(calc_relative_angle((0, 0), dire, (0, 1)))  # Up
+    print(calc_relative_angle((0, 0), dire, (-1, 0)))  # Left
+    print(calc_relative_angle((0, 0), dire, (0, -1)))  # Down

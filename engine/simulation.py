@@ -73,7 +73,6 @@ class SimulationBase:
             # Update
             self._preupdate()
             self._update()
-            self._postupdate()
 
             # Physics
             self.space.step(self.delta_time)
@@ -92,6 +91,8 @@ class SimulationBase:
                 # Sleep to maintain FPS
                 if self.enable_realtime:
                     self._clock.tick(self.fps)
+
+            self._postupdate()
 
     def _preupdate(self):
         for obj in self._game_objects:

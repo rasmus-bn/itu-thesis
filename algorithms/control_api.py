@@ -22,3 +22,12 @@ class RobotControlAPI:
 
     def set_message(self, message: str):
         return self._robot.set_message(message=message)
+
+    def enable_light(self):
+        self._robot.light_switch = True
+
+    def disable_light(self):
+        self._robot.light_switch = False
+
+    def toggle_light(self):
+        self._robot.light_switch = not self._robot.light_switch

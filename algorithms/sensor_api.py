@@ -22,5 +22,5 @@ class RobotSensorAPI:
     def get_all_waypoints(self) -> [list[IWaypointData], int]:
         return self._robot.sim.environment.get_all_waypoints()
 
-
-
+    def get_robot_light_input(self) -> float:
+        return self._robot.light_detectors.copy()
