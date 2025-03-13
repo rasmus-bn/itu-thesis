@@ -200,33 +200,33 @@ class RobotBase(Box):
                 sensor.distance = self._lidar_range
                 sensor.gameobject = None
 
-        # Light emitter
-        if self.light_switch:
-            query_result = self.body.space.point_query(
-                self.body.position, self._light_range, ray_filter
-            )
-            for result in query_result:
-                body: pymunk.Body = result.shape.body
-                robot: RobotBase = body.gameobject
-                if isinstance(robot, RobotBase):
-                    distance = result.distance
-                    angle = body.position.get_angle_between(self.body.position)
-                    # Add the emitter to the sensor's detections
-                    self.detectors.append(ILightData(distance, angle))
+        # # Light emitter
+        # if self.light_switch:
+        #     query_result = self.body.space.point_query(
+        #         self.body.position, self._light_range, ray_filter
+        #     )
+        #     for result in query_result:
+        #         body: pymunk.Body = result.shape.body
+        #         robot: RobotBase = body.gameobject
+        #         if isinstance(robot, RobotBase):
+        #             distance = result.distance
+        #             angle = body.position.get_angle_between(self.body.position)
+        #             # Add the emitter to the sensor's detections
+        #             self.detectors.append(ILightData(distance, angle))
 
-        # Send message
-        if self._local_message:
-            query_result = self.body.space.point_query(
-                self.body.position, self._comms_range, ray_filter
-            )
-            for result in query_result:
-                robot: RobotBase = result.shape.body.gameobject
-                if isinstance(robot, RobotBase):
-                    body: pymunk.Body = robot.game_object.body
-                    distance = body.position.get_distance(self._body.position)
-                    angle = body.position.get_angle(self._body.position)
-                    # Add the emitter to the sensor's detections
-                    self.detectors.append(ILightData(distance, angle))
+        # # Send message
+        # if self._local_message:
+        #     query_result = self.body.space.point_query(
+        #         self.body.position, self._comms_range, ray_filter
+        #     )
+        #     for result in query_result:
+        #         robot: RobotBase = result.shape.body.gameobject
+        #         if isinstance(robot, RobotBase):
+        #             body: pymunk.Body = robot.game_object.body
+        #             distance = body.position.get_distance(self._body.position)
+        #             angle = body.position.get_angle(self._body.position)
+        #             # Add the emitter to the sensor's detections
+        #             self.detectors.append(ILightData(distance, angle))
 
     def postupdate(self):
         self.detectors.clear()
