@@ -1,0 +1,93 @@
+Random research and FA algorithm (collision not computed):
+***Does not handle collision or new computations on best route, 
+when new agents come to push an object that is already being pushed***
+# make a "timer give up parameter" that makes the agent give up if it has been wayting alone by a resource for too long. 
+# change ways of receiving/sending route info
+# make restriction so all agents are within the map at all time
+# change move function so it will increase/decrease waypoint_counter
+
+initialize map, M //grid should have the waypoint dist = 1
+initialize number, n, of agents
+initialize position of each agent to home position
+end_condition = set an end goal for the whole colony
+sensor_obj = set sensor value that indicate the agent is close to an object
+object_found[] //indicator for if an agent has found an object
+route_per_agent[][] //each waypoint a agent passes is stored
+waypoint_counter_per_agent[] //number of waypoints an agent has passed
+best_route[][] //the best route between the agents that collectively transport an object
+best_route_waypoint_counter[] //the distance of the best route (i.e number of waypoints)
+epsilon = 0.1 //range for agent coordinates
+push_object[] //true if object is being pushed by agent
+receive_route[] //number of steps and route sent by other agents
+
+for range(i = 0, n-1) //initialize variables for each agent
+    route_per_agent[i][0] = //coordinates of homebase
+    object_found[i] = false
+    waypoint_counter_per_agent[i] = 1 //it has counted the waypoint of homebase
+    receive_route[i] = infinity
+    push_object[i] = false
+
+
+while !end_condition do
+    for range(i = 0, n-1) //for each agent
+        if object_found[i] and waypoint_counter_per_agent[i] == 0 then //object has been returned to homebase and agent is ready to explore again
+            route_per_agent[i][0] = //coordinates of homebase
+            waypoint_counter_per_agent[i] = 1 //it has counted the waypoint of homebase
+            object_found[i] = false
+            receive_route[i] = infinity
+            push_object[i] = false
+        if object_found[i] then //returning to homebase with object
+            waypoint_pos = best_route[i][waypoint_counter_per_agent[i]-1] //update position of agent and object
+            waypoint_counter_per_agent[i] -- //update how many steps are left of the best route for reaching homebase
+        sensor = read sensor value
+        else if sensor >= sensor_obj then //finds object
+            object_found[i] = true
+            agent_push = // true if agent can push object, false otherwise
+            if !agent_push do 
+                turn_on_light() //call for other agents
+            else
+                turn_of_lights()
+                push_object[i] = true
+                if other_agents then //if there are other agents pushing the object
+                    *best_route_waypoint_counter[i], best_route[i] = receive(CHANGE) //receive route from other agents
+                    if best_route_waypoint_counter > waypoint_counter_per_agent[i]
+                        send(waypoint_counter_per_agent[i], route_per_agent[i])
+                        best_route_waypoint_counter[i] = waypoint_counter_per_agent
+                        best_route[i] = route_per_agent[i]
+                    *best_route_waypoint_counter[i] = best_route[i].length
+                    *pos = best_route[i][best_route_waypoint_counter[i]-1] //update position of agent and object
+                    *best_route_waypoint_counter[i] -- //update how many steps are left of the best route for reaching homebase
+                else
+                    *best_route_waypoint_counter[i] = waypoint_counter_per_agent[i]
+                    *pos = route_per_agent[i][best_route_waypoint_counter[i]-1] //update position of agent and object
+                    *best_route_waypoint_counter[i] -- //update how many steps are left of the best route for reaching homebase
+        else //explores
+            waypoint_pos = FA or randomly select new position from neighbouring positions (agent can not choose previously visited points) //consider edgecase where it is stuck in a path and can't move forward as it will revisit its previously points
+            move(waypoint_pos, push_object[i], waypoint_counter_per_agent[i], route_per_agent[i]) //move the agent and possibly object
+            
+            
+
+move(waypoint, push_object, waypoint_counter, add_waypoint_to_route)
+    set motor value towards waypoint //the direction of the waypoint, the agent is moving towards
+    if push_object then
+        make agent push the object in same direction
+            agent_coor = the coordinates of the agent at current time
+    if !((agent_coor + epsilon > waypoint) and (agent_coor - epsilon < waypoint)) //dobbelt check the math (if agent is within reach of waypoint)
+        if push_object then     //if agent is pushing object and has hit the targeted waypoint on the route, it has 1 less waypoint on the route to homebase
+            waypoint_counter--
+        else                    //else agent is exploring and adding waypoints to its route
+            add_waypoint_to_route[waypoint_counter] = waypoint //store waypoint into array of visited points (make a trail/route)
+            waypoint_counter++
+
+
+
+receive(receive_route)  **CHANGE!
+    receive_route = listen for short route from other agents (including waypoint_counter and route)
+                  
+send(my_waypoint_counter, my_route)
+    send (my_waypoint_counter, my_route) //transmit to other agents
+     
+
+
+
+

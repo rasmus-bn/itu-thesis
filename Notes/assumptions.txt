@@ -1,5 +1,7 @@
 Collectively push/pull object: When the object has arrived to homebase, then the home base informs the robots to detach and go out searching for new object. Concretely in simulation this is done by the object being deleted once it has reach home base.
+
 Ground friction: We are corrently using "damping" for friction.
+
 For the random search algorithm: We are allowing robots to communicate locally in order to find shortest path home. Also the robots will deposit a trail, so it knows hows to return home.
 
 
@@ -7,4 +9,4 @@ Delemination:
 - We do not consider wind and weather
 - Whatever happens inside the home base, we do not care about. The home base manages the objects in an unknown way.
 - We do not consider terrain (maybe we will consider obstacles).
-- 
+- We do not account for delays and connectivity issue in communication amoung agents
