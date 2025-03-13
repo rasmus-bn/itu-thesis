@@ -30,19 +30,24 @@ class RobotBase(Box):
     _robot_counter = 1  # Keeps track of unique robot IDs
 
     def __init__(
-            self,
-            battery_volume: float,
-            motor_volume: float,
-            position: tuple = None,
-            angle: float = 0,
-            color: tuple = None,
-            num_ir_sensors: int = 8,
-            sensor_range: float = 50.0,
-            controller: any = None,
-            ignore_battery: bool = False
+        self,
+        battery_volume: float,
+        motor_volume: float,
+        position: tuple = None,
+        angle: float = 0,
+        color: tuple = None,
+        num_ir_sensors: int = 8,
+        sensor_range: float = 50.0,
+        controller: any = None,
+        ignore_battery: bool = False,
     ):
+        self._comms_range = 50
         self._local_message: None | str = None
-        self._local_revived_messages: list[str] = []
+        self.local_received_messages: list[str] = []
+
+        self._light_range = 20
+        self.light_switch = False
+        self.detectors: list[ILightData] = []
 
         self.ignore_battery = ignore_battery
         self.battery_capacity = battery_volume  # TODO: find proper unit and convertion
@@ -92,7 +97,7 @@ class RobotBase(Box):
 
         # Sensor setup
         self.num_ir_sensors = num_ir_sensors
-        self.sensor_range = sensor_range
+        self._lidar_range = sensor_range
         self.ir_sensors: list[ILidarData] = self._initialize_ir_sensors()
 
         # Set up the shape filter (ignores itself but detects other objects)
@@ -102,7 +107,7 @@ class RobotBase(Box):
         self.shape.filter = pymunk.ShapeFilter(
             categories=0b0001,  # This object is a robot
             mask=0b0001 | 0b0010 | 0b0100,  # Detects robots, obstacles, and goals
-            group=self.robot_group  # Ignores itself
+            group=self.robot_group,  # Ignores itself
         )
 
         # Create API objects
@@ -126,7 +131,7 @@ class RobotBase(Box):
         self._local_message = message
 
     def get_local_message(self) -> list[str]:
-        return self._local_revived_messages
+        return self.local_received_messages
 
     def attach_to_resource(self, resource: Resource):
         if self.tether:
@@ -158,69 +163,91 @@ class RobotBase(Box):
         for i in range(self.num_ir_sensors):
             angle = self.body.angle + (i * angle_step)  # Compute sensor angle
             sensors.append(
-                ILidarData(angle=angle, distance=self.sensor_range, gameobject=None)
+                ILidarData(angle=angle, distance=self._lidar_range, gameobject=None)
             )
 
         return sensors
 
-    def update_sensors(self):
+    def preupdate(self):
+        ray_filter = pymunk.ShapeFilter(
+            mask=0b0001 | 0b0010 | 0b0100, group=self.robot_group
+        )
         # IR sensor (or LIDAR)
         for sensor in self.ir_sensors:
             sensor_pos = self.body.position  # Robot's center
             direction = (
                 np.cos(self.body.angle + sensor.angle),
-                np.sin(self.body.angle + sensor.angle)
+                np.sin(self.body.angle + sensor.angle),
             )
 
             # Raycast in sensor direction
-            ray_filter = pymunk.ShapeFilter(mask=0b0001 | 0b0010 | 0b0100, group=self.robot_group)
             # print(f"using group: {self.robot_group}")
 
             hit = self.sim.space.segment_query_first(
                 sensor_pos,  # start of the ray
-                (sensor_pos[0] + direction[0] * self.sensor_range,
-                 sensor_pos[1] + direction[1] * self.sensor_range),  # end of the ray
+                (
+                    sensor_pos[0] + direction[0] * self._lidar_range,
+                    sensor_pos[1] + direction[1] * self._lidar_range,
+                ),  # end of the ray
                 1.0,  # Radius of ray
-                shape_filter=ray_filter
+                shape_filter=ray_filter,
             )
 
             if hit:
-                sensor.distance = hit.alpha * self.sensor_range
+                sensor.distance = hit.alpha * self._lidar_range
                 sensor.gameobject = hit.shape.body.gameobject
             else:
-                sensor.distance = self.sensor_range
+                sensor.distance = self._lidar_range
                 sensor.gameobject = None
 
-        # space = self._body.space
-        # self._body.shapes
+        # Light emitter
+        if self.light_switch:
+            query_result = self.body.space.point_query(
+                self.body.position, self._light_range, ray_filter
+            )
+            for result in query_result:
+                body: pymunk.Body = result.shape.body
+                robot: RobotBase = body.gameobject
+                if isinstance(robot, RobotBase):
+                    distance = result.distance
+                    angle = body.position.get_angle_between(self.body.position)
+                    # Add the emitter to the sensor's detections
+                    self.detectors.append(ILightData(distance, angle))
 
-        # # Light emitter
-        # shapes = space.point_query(self._body.position, self._range, self._shape_filter)
-        # for shape in shapes:
-        #     obj: RobotBase = shape.shape.body.gameobject
-        #     if isinstance(obj, RobotBase):
-        #         body: pymunk.Body = obj.game_object.body
-        #         distance = body.position.get_distance(self._body.position)
-        #         angle = body.position.get_angle(self._body.position)
-        #         # Add the emitter to the sensor's detections
-        #         obj.on_light_discovered(ILightData(distance, angle))
+        # Send message
+        if self._local_message:
+            query_result = self.body.space.point_query(
+                self.body.position, self._comms_range, ray_filter
+            )
+            for result in query_result:
+                robot: RobotBase = result.shape.body.gameobject
+                if isinstance(robot, RobotBase):
+                    body: pymunk.Body = robot.game_object.body
+                    distance = body.position.get_distance(self._body.position)
+                    angle = body.position.get_angle(self._body.position)
+                    # Add the emitter to the sensor's detections
+                    self.detectors.append(ILightData(distance, angle))
+
+    def postupdate(self):
+        self.detectors.clear()
+        self.local_received_messages.clear()
 
     def draw_sensors(self, screen):
         for sensor in self.ir_sensors:
             sensor_pos = self.body.position  # Robot's center
             direction = (
                 np.cos(self.body.angle + sensor.angle),
-                np.sin(self.body.angle + sensor.angle)
+                np.sin(self.body.angle + sensor.angle),
             )
 
             # Compute sensor end position
             sensor_end = (
                 sensor_pos[0] + direction[0] * sensor.distance,
-                sensor_pos[1] + direction[1] * sensor.distance
+                sensor_pos[1] + direction[1] * sensor.distance,
             )
 
             # Choose color: RED if sensor detects an object, GREEN if nothing detected
-            color = (255, 0, 0) if sensor.distance < self.sensor_range else (0, 255, 0)
+            color = (255, 0, 0) if sensor.distance < self._lidar_range else (0, 255, 0)
 
             # Convert Pymunk coordinates to Pygame coordinates
             start_pos = (int(sensor_pos[0]), int(sensor_pos[1]))
@@ -259,8 +286,8 @@ class RobotBase(Box):
         # Draw direction
         right_up = self.body.local_to_world((self.right[0], self.right[1] + 1))
         right_down = self.body.local_to_world((self.right[0], self.right[1] - 1))
-        center_up = self.body.local_to_world((0, + 1))
-        center_down = self.body.local_to_world((0, - 1))
+        center_up = self.body.local_to_world((0, +1))
+        center_down = self.body.local_to_world((0, -1))
         pygame.draw.polygon(
             surface,
             (0, 255, 0),
@@ -276,9 +303,6 @@ class RobotBase(Box):
         # self.draw_sensors(surface)
 
     def update(self):
-        print(self.body.angle)
-        self.update_sensors()
-
         # todo change
         self.controller_update()
         if self.controller:
@@ -311,11 +335,10 @@ class RobotBase(Box):
     def _calc_power_consumption(self):
         # TODO: Figure out the proper unit and convertion
         return (
-                (abs(self._left_motor) + abs(self._right_motor))
-                * self.motor_volume
-                * MOTOR_POWER_SCALER
+            (abs(self._left_motor) + abs(self._right_motor))
+            * self.motor_volume
+            * MOTOR_POWER_SCALER
         )
 
     def _calc_robot_density(self):
         return self.mass / self.total_volume
-
