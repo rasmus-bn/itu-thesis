@@ -11,6 +11,8 @@ from engine.helpers import pymunk_to_pygame_point
 import numpy as np
 import pymunk
 
+from engine.types import ILightDetection
+
 # Used for calculating the size of the robot
 BATTERY_SCALER = 1
 MOTOR_SCALER = 1
@@ -160,6 +162,7 @@ class RobotBase(Box):
         return sensors
 
     def update_sensors(self):
+        # IR sensor (or LIDAR)
         for sensor in self.ir_sensors:
             sensor_pos = self.body.position  # Robot's center
             direction = (
@@ -185,6 +188,20 @@ class RobotBase(Box):
             else:
                 sensor.distance = self.sensor_range
                 sensor.gameobject = None
+
+        space = self._body.space
+        self._body.shapes
+
+        # Light emitter
+        shapes = space.point_query(self._body.position, self._range, self._shape_filter)
+        for shape in shapes:
+            obj: RobotBase = shape.shape.body.gameobject
+            if isinstance(obj, RobotBase):
+                body: pymunk.Body = obj.game_object.body
+                distance = body.position.get_distance(self._body.position)
+                angle = body.position.get_angle(self._body.position)
+                # Add the emitter to the sensor's detections
+                obj.on_light_discovered(ILightDetection(distance, angle))
 
     def draw_sensors(self, screen):
         for sensor in self.ir_sensors:
