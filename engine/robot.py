@@ -42,8 +42,8 @@ class RobotBase(Box):
         ignore_battery: bool = False,
     ):
         self._comms_range = 50
-        self._local_message: None | str = None
-        self.local_received_messages: list[str] = []
+        self.message: None | str = None
+        self.received_messages: list[str] = []
 
         self._light_range = 20
         self.light_switch = False
@@ -127,11 +127,11 @@ class RobotBase(Box):
         self._left_motor = left
         self._right_motor = right
 
-    def set_local_message(self, message: str):
-        self._local_message = message
+    def set_message(self, message: str):
+        self.message = message
 
-    def get_local_message(self) -> list[str]:
-        return self.local_received_messages
+    def get_received_messages(self) -> list[str]:
+        return self.received_messages
 
     def attach_to_resource(self, resource: Resource):
         if self.tether:
@@ -214,23 +214,20 @@ class RobotBase(Box):
         #             # Add the emitter to the sensor's detections
         #             self.detectors.append(ILightData(distance, angle))
 
-        # # Send message
-        # if self._local_message:
-        #     query_result = self.body.space.point_query(
-        #         self.body.position, self._comms_range, ray_filter
-        #     )
-        #     for result in query_result:
-        #         robot: RobotBase = result.shape.body.gameobject
-        #         if isinstance(robot, RobotBase):
-        #             body: pymunk.Body = robot.game_object.body
-        #             distance = body.position.get_distance(self._body.position)
-        #             angle = body.position.get_angle(self._body.position)
-        #             # Add the emitter to the sensor's detections
-        #             self.detectors.append(ILightData(distance, angle))
+        # Send message
+        if self.message:
+            query_result = self.body.space.point_query(
+                self.body.position, self._comms_range, ray_filter
+            )
+            for result in query_result:
+                robot: RobotBase = result.shape.body.gameobject
+                if isinstance(robot, RobotBase):
+                    # print(f"Robot {self} has {robot} in communication range {self._comms_range}")
+                    self.received_messages.append(robot.message)
 
     def postupdate(self):
         self.detectors.clear()
-        self.local_received_messages.clear()
+        self.received_messages.clear()
 
     def draw_sensors(self, screen):
         for sensor in self.ir_sensors:

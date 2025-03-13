@@ -20,5 +20,5 @@ class RobotControlAPI:
     def is_attached(self):
         return self._robot.tether is not None
 
-    def set_local_message(self, message: str):
-        return self._robot.set_local_message(message=message)
+    def set_message(self, message: str):
+        return self._robot.set_message(message=message)
