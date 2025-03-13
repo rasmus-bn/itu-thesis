@@ -3,6 +3,7 @@ import pygame
 
 from algorithms.control_api import RobotControlAPI
 from algorithms.sensor_api import RobotSensorAPI
+from engine.light_sensor import LightEmitter, LightSensor
 from engine.tether import Tether
 from engine.gpt_generated.closest_point_on_circle import closest_point_on_circle
 from engine.environment import Resource
@@ -100,6 +101,9 @@ class RobotBase(Box):
             group=self.robot_group  # Ignores itself
         )
 
+        self.light_emitter = LightEmitter(self.body, self.shape.filter, 200)
+        self.light_sensor = LightSensor(self)
+
         # Create API objects
         sensors = RobotSensorAPI(self)
         controls = RobotControlAPI(self)
@@ -151,6 +155,8 @@ class RobotBase(Box):
         return sensors
 
     def update_sensors(self):
+        self.light_emitter.update()
+
         for sensor in self.ir_sensors:
             sensor_pos = self.body.position  # Robot's center
             direction = (
@@ -178,6 +184,8 @@ class RobotBase(Box):
                 sensor.gameobject = None
 
     def draw_sensors(self, screen):
+        self.light_emitter.draw(screen)
+
         for sensor in self.ir_sensors:
             sensor_pos = self.body.position  # Robot's center
             direction = (
@@ -241,7 +249,7 @@ class RobotBase(Box):
         )
 
         # Draw sensors
-        # self.draw_sensors(surface)
+        self.draw_sensors(surface)
 
     def update(self):
         self.update_sensors()
