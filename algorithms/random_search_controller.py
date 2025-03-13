@@ -57,7 +57,7 @@ class RandomSearchController(BaseController):
         robot_angle = self.sensors.get_robot_angle()
 
         # Determine the angle between the robot's forward direction and the home base direction
-        home_angle = math.atan2(home_direction.y, home_direction.x) + (math.pi/2)
+        home_angle = math.atan2(home_direction.y, home_direction.x) + math.pi  # this I'm not sure why
         angle_difference = home_angle - robot_angle
 
         # Normalize the angle difference to be between -pi and pi

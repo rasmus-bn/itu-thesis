@@ -75,7 +75,7 @@ class Box(IGameObject):
         )
         self.shape.density = self.density_3d
         self.top = (0, self.length / 2)
-        self.bottom = (0, self.length / 2)
+        self.bottom = (0, -self.length / 2)
         self.left = (-self.width / 2, 0)
         self.right = (self.width / 2, 0)
 

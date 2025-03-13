@@ -87,8 +87,8 @@ class RobotBase(Box):
 
         # Purely for visualization
         self._wheel_size = 4
-        self._wheel_pos_left = (self.left[0] + self._wheel_size, self.left[1])
-        self._wheel_pos_right = (self.right[0] - self._wheel_size, self.right[1])
+        self._wheel_pos_left = (self.top[0], self.top[1] - self._wheel_size)
+        self._wheel_pos_right = (self.bottom[0], self.bottom[1] + self._wheel_size)
 
         # Sensor setup
         self.num_ir_sensors = num_ir_sensors
@@ -257,18 +257,18 @@ class RobotBase(Box):
         )
 
         # Draw direction
-        up_left = self.body.local_to_world((self.top[0] - 1, self.top[1]))
-        up_right = self.body.local_to_world((self.top[0] + 1, self.top[1]))
-        center_left = self.body.local_to_world((-1, 0))
-        center_right = self.body.local_to_world((1, 0))
+        right_up = self.body.local_to_world((self.right[0], self.right[1] + 1))
+        right_down = self.body.local_to_world((self.right[0], self.right[1] - 1))
+        center_up = self.body.local_to_world((0, + 1))
+        center_down = self.body.local_to_world((0, - 1))
         pygame.draw.polygon(
             surface,
-            (0, 0, 0),
+            (0, 255, 0),
             [
-                pymunk_to_pygame_point(up_left, surface),
-                pymunk_to_pygame_point(center_left, surface),
-                pymunk_to_pygame_point(center_right, surface),
-                pymunk_to_pygame_point(up_right, surface),
+                pymunk_to_pygame_point(center_up, surface),
+                pymunk_to_pygame_point(center_down, surface),
+                pymunk_to_pygame_point(right_down, surface),
+                pymunk_to_pygame_point(right_up, surface),
             ],
         )
 
@@ -276,6 +276,7 @@ class RobotBase(Box):
         # self.draw_sensors(surface)
 
     def update(self):
+        print(self.body.angle)
         self.update_sensors()
 
         # todo change
@@ -294,8 +295,8 @@ class RobotBase(Box):
                 self._force_right = 0
                 self.color = self.down_color
 
-        self.body.apply_force_at_local_point((0, self._force_left), self.left)
-        self.body.apply_force_at_local_point((0, self._force_right), self.right)
+        self.body.apply_force_at_local_point((self._force_left, 0), self.top)
+        self.body.apply_force_at_local_point((self._force_right, 0), self.bottom)
 
     def controller_update(self):
         pass
