@@ -39,6 +39,9 @@ class RobotBase(Box):
             controller: any = None,
             ignore_battery: bool = False
     ):
+        self._local_message: None | str = None
+        self._local_revived_messages: list[str] = []
+
         self.ignore_battery = ignore_battery
         self.battery_capacity = battery_volume  # TODO: find proper unit and convertion
         self.motor_strength = motor_volume  # TODO: find proper unit and convertion
@@ -116,6 +119,12 @@ class RobotBase(Box):
 
         self._left_motor = left
         self._right_motor = right
+
+    def set_local_message(self, message: str):
+        self._local_message = message
+
+    def get_local_message(self) -> list[str]:
+        return self._local_revived_messages
 
     def attach_to_resource(self, resource: Resource):
         if self.tether:
@@ -210,6 +219,10 @@ class RobotBase(Box):
                     pygame.draw.circle(screen, (200, 200, 0), end_pos, 10)
                 if isinstance(obj, RobotBase):
                     pygame.draw.circle(screen, (200, 0, 0), end_pos, 10)
+
+    def send_your_message(self):
+        pass
+        # todo: implement local communication
 
     def draw(self, surface):
         super().draw(surface)

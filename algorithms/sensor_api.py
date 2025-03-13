@@ -13,3 +13,8 @@ class RobotSensorAPI:
     def get_robot_angle(self) -> float:
         return self._robot.body.angle
 
+    def get_local_message(self) -> list[str]:
+        return self._robot.get_local_message()
+
+
+
