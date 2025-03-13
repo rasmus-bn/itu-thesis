@@ -4,6 +4,7 @@ from engine.objects import Circle, Box
 
 class Environment:
     def __init__(self, sim):
+        self.waypoints = None
         self.sim = sim
         self.homebase = HomeBase(sim.pixels_x // 2, sim.pixels_y // 2)
         self.sim.add_game_object(self.homebase)
@@ -29,6 +30,14 @@ class Environment:
             self.resources.append(resource)
             self.sim.add_game_object(resource)
 
+    def generate_waypoints(self, distance=10):
+        self.waypoints = []
+        for x in range(0, self.sim.pixels_x, distance):
+            for y in range(0, self.sim.pixels_y, distance):
+                waypoint = Waypoint(x, y)
+                self.waypoints.append(waypoint)
+                self.sim.add_game_object(waypoint)
+
     def handle_homebase_collision(self, arbiter, space):
         homebase_shape, resource_shape = arbiter.shapes  # Get colliding shapes
 
@@ -49,6 +58,12 @@ class Environment:
             print("error: cannot find resource", resource)
 
         return False
+
+
+class Waypoint(Circle):
+    def __init__(self, x, y, radius=5, color=(40, 200, 40)):
+        super().__init__(x=x, y=y, radius=radius, color=color)
+        self.shape.sensor = True
 
 
 class Resource(Circle):
