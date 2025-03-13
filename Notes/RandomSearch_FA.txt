@@ -1,6 +1,6 @@
 Random research and FA algorithm (collision not computed):
-***Does not handle collision or new computations on best route, 
-when new agents come to push an object that is already being pushed***
+***Does not handle collision***
+# make sure it handles new computations on best route, when new agents come to push an object that is already being pushed
 # make a "timer give up parameter" that makes the agent give up if it has been wayting alone by a resource for too long. 
 # make restriction so all agents are within the map at all time
 
@@ -23,32 +23,32 @@ epsilon = 0.1 //range for agent coordinates
 
     while !end_condition do
         for range(i = 0, n-1) //for each agent
-            if object_found[i] and **agent at homebase** //object has been returned to homebase and agent is ready to explore again
+            num_waypoints_left = (waypoint_counter_to_object[i] - waypoint_counter_to_homebase[i])
+            sensor = read sensor value
+            if object_found[i] and num_waypoints_left == -1 //object has been returned to homebase and agent is ready to explore again
                 route_per_agent[i][0] = //coordinates of homebase
                 waypoint_counter_to_object[i] = 0 //it has counted the waypoint of homebase
                 waypoint_counter_to_homebase[i] = 0
                 object_found[i] = false
             if object_found[i] then //returning to homebase with object
                 received_waypoint_counter, received_route = receive() //receive route from other agents
-                num_waypoints_left = (waypoint_counter_to_object[i] - waypoint_counter_to_homebase[i])
                 if received_waypoint_counter <= num_waypoints_left 
                     waypoint_counter_to_object[i] = received_waypoint_counter
                     route_per_agent[i] = received_route
-                    waypoint_counter_to_homebase[i] = 1
+                    waypoint_counter_to_homebase[i] = 0
                 else
                     send(num_waypoints_left, route_per_agent[i][range (0, num_waypoints_left)])
                 move(i, object_found[i], waypoint_counter_to_object[i], waypoint_counter_to_homebase[i], route_per_agent[i]) //move the agent and possibly object
-            sensor = read sensor value
             else if sensor >= sensor_obj then //finds object
                 object_found[i] = true
-                    received_waypoint_counter, received_route = receive() //receive route from other agents
-                    if received_waypoint_counter <= waypoint_counter_to_object[i]
-                        waypoint_counter_to_object[i] = received_waypoint_counter
-                        route_per_agent[i] = received_route
-                    else
-                        send(waypoint_counter_to_object[i], route_per_agent[i])
-                    waypoint_counter_to_homebase[i] = 1
-                    move(i, object_found[i], waypoint_counter_to_object[i], waypoint_counter_to_homebase[i], route_per_agent[i]) //move the agent and possibly object
+                received_waypoint_counter, received_route = receive() //receive route from other agents
+                if received_waypoint_counter <= waypoint_counter_to_object[i]
+                    waypoint_counter_to_object[i] = received_waypoint_counter
+                    route_per_agent[i] = received_route
+                    waypoint_counter_to_homebase[i] = 0
+                else
+                    send(waypoint_counter_to_object[i], route_per_agent[i])
+                move(i, object_found[i], waypoint_counter_to_object[i], waypoint_counter_to_homebase[i], route_per_agent[i]) //move the agent and possibly object
             else //explores
                 move(i, object_found[i], waypoint_counter_to_object[i], waypoint_counter_to_homebase[i], route_per_agent[i]) //move the agent and possibly object
 
@@ -65,11 +65,11 @@ move(agent, object_found, waypoint_counter_to_obj, waypoint_counter_to_homebase,
             set motor value of agent i towards next_waypoint_corr
             make agent i push the object in same direction of agent i
             agent_push = // true if agent can push object, false otherwise
-                if !agent_push do 
-                    stop motor of agent i
-                    turn_on_light() //call for other agents
-                else
-                    turn_of_lights()
+            if !agent_push do 
+                stop motor of agent i
+                turn_on_light() //call for other agents
+            else
+                turn_of_lights()
         else //exploring
             waypoint_counter_to_obj ++ //this values have to be a deep copy!
             new_waypoint_corr = FA or randomly select new waypoint from neighbouring waypoints (agent can not choose previously visited points) //consider edgecase where it is stuck in a path and can't move forward as it will revisit its previously points
@@ -82,11 +82,11 @@ move(agent, object_found, waypoint_counter_to_obj, waypoint_counter_to_homebase,
             set motor value of agent i towards next_waypoint_corr
             make agent i push the object in same direction of agent i
             agent_push = // true if agent can push object, false otherwise
-                if !agent_push do 
-                    stop motor of agent i
-                    turn_on_light() //call for other agents
-                else
-                    turn_of_lights()
+            if !agent_push do 
+                stop motor of agent i
+                turn_on_light() //call for other agents
+            else
+                turn_of_lights()
         else //exploring
             waypoint_corr = agents_route[waypoint_counter_to_obj]
             set motor value of agent i towards waypoint_corr     
