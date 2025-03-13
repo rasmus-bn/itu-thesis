@@ -31,7 +31,13 @@ class IGameObject:
     def has_update(self):
         return getattr(self.__class__, "update") is not getattr(IGameObject, "update")
 
+    def preupdate(self):
+        pass
+
     def update(self):
+        pass
+
+    def postupdate(self):
         pass
 
     def draw(self, surface: Surface):

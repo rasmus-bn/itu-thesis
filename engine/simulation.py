@@ -25,7 +25,6 @@ class SimulationBase:
 
     def __post_init__(self):
         self._game_objects: IGameObject = []
-        self._logic_objects = None
         self._tethers: list[Tether] = []
 
         # Physics
@@ -40,7 +39,6 @@ class SimulationBase:
         self._clock = None
 
     def _start(self):
-        self._logic_objects = [go for go in self._game_objects if go.has_update]
         self.start_time = time()
 
         # Visualization
@@ -72,8 +70,10 @@ class SimulationBase:
             self.frame_count += 1
             # print(f"Frame {self.frame_count}")
 
-            # Logic
-            self._update_logic()
+            # Update
+            self._preupdate()
+            self._update()
+            self._postupdate()
 
             # Physics
             self.space.step(self.delta_time)
@@ -93,10 +93,17 @@ class SimulationBase:
                 if self.enable_realtime:
                     self._clock.tick(self.fps)
 
-    def _update_logic(self):
-        self.update()
-        for obj in self._logic_objects:
+    def _preupdate(self):
+        for obj in self._game_objects:
+            obj.preupdate()
+
+    def _update(self):
+        for obj in self._game_objects:
             obj.update()
+
+    def _postupdate(self):
+        for obj in self._game_objects:
+            obj.postupdate()
 
     def _update_visuals(self):
         if self.enable_display:
@@ -108,8 +115,6 @@ class SimulationBase:
             for tether in self._tethers:
                 tether.draw(self._display)
 
-    def update(self):
-        pass
 
     def add_game_object(self, obj: IGameObject):
         obj.sim = self

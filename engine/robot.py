@@ -11,7 +11,7 @@ from engine.helpers import pymunk_to_pygame_point
 import numpy as np
 import pymunk
 
-from engine.types import ILightDetection
+from engine.types import ILidarData, ILightData
 
 # Used for calculating the size of the robot
 BATTERY_SCALER = 1
@@ -93,7 +93,7 @@ class RobotBase(Box):
         # Sensor setup
         self.num_ir_sensors = num_ir_sensors
         self.sensor_range = sensor_range
-        self.ir_sensors: list[SensorData] = self._initialize_ir_sensors()
+        self.ir_sensors: list[ILidarData] = self._initialize_ir_sensors()
 
         # Set up the shape filter (ignores itself but detects other objects)
         self.robot_group = RobotBase._robot_counter
@@ -152,12 +152,14 @@ class RobotBase(Box):
             self.tether = None
 
     def _initialize_ir_sensors(self):
-        sensors: list[SensorData] = []
+        sensors: list[ILidarData] = []
         angle_step = 2 * np.pi / self.num_ir_sensors  # Distribute sensors equally
 
         for i in range(self.num_ir_sensors):
             angle = self.body.angle + (i * angle_step)  # Compute sensor angle
-            sensors.append(SensorData(angle=angle, distance=self.sensor_range, gameobject=None))
+            sensors.append(
+                ILidarData(angle=angle, distance=self.sensor_range, gameobject=None)
+            )
 
         return sensors
 
@@ -189,19 +191,19 @@ class RobotBase(Box):
                 sensor.distance = self.sensor_range
                 sensor.gameobject = None
 
-        space = self._body.space
-        self._body.shapes
+        # space = self._body.space
+        # self._body.shapes
 
-        # Light emitter
-        shapes = space.point_query(self._body.position, self._range, self._shape_filter)
-        for shape in shapes:
-            obj: RobotBase = shape.shape.body.gameobject
-            if isinstance(obj, RobotBase):
-                body: pymunk.Body = obj.game_object.body
-                distance = body.position.get_distance(self._body.position)
-                angle = body.position.get_angle(self._body.position)
-                # Add the emitter to the sensor's detections
-                obj.on_light_discovered(ILightDetection(distance, angle))
+        # # Light emitter
+        # shapes = space.point_query(self._body.position, self._range, self._shape_filter)
+        # for shape in shapes:
+        #     obj: RobotBase = shape.shape.body.gameobject
+        #     if isinstance(obj, RobotBase):
+        #         body: pymunk.Body = obj.game_object.body
+        #         distance = body.position.get_distance(self._body.position)
+        #         angle = body.position.get_angle(self._body.position)
+        #         # Add the emitter to the sensor's detections
+        #         obj.on_light_discovered(ILightData(distance, angle))
 
     def draw_sensors(self, screen):
         for sensor in self.ir_sensors:
@@ -316,9 +318,3 @@ class RobotBase(Box):
     def _calc_robot_density(self):
         return self.mass / self.total_volume
 
-
-@dataclass
-class SensorData:
-    angle: int
-    distance: float
-    gameobject: IGameObject | None
