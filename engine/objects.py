@@ -17,8 +17,8 @@ class IGameObject:
         density: float = 1,
         virtual_height: float = 1,
     ):
-        self.body = body
-        self.shape = shape
+        self.body: pymunk.Body = body
+        self.shape: pymunk.Shape = shape
         self.density = density
         self.virtual_height = virtual_height
         self.sim: SimulationBase = None
@@ -60,7 +60,7 @@ class Box(IGameObject):
     trigger: bool = False
 
     def __post_init__(self):
-        self.body = pymunk.Body()
+        self.body: pymunk.Body = pymunk.Body()
         self.body.gameobject = self
         self.body.position = (self.x, self.y)
         self.body.angle = self.angle
