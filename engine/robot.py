@@ -8,6 +8,7 @@ from engine.gpt_generated.closest_point_on_circle import closest_point_on_circle
 from engine.environment import Resource
 from engine.objects import Box, IGameObject
 from engine.helpers import pymunk_to_pygame_point
+from sim_math.angles import calc_relative_angle
 import numpy as np
 import pymunk
 
@@ -45,9 +46,9 @@ class RobotBase(Box):
         self.message: None | str = None
         self.received_messages: list[str] = []
 
-        self._light_range = 20
+        self._light_range = 200
         self.light_switch = False
-        self.detectors: list[ILightData] = []
+        self.light_detectors: list[ILightData] = []
 
         self.ignore_battery = ignore_battery
         self.battery_capacity = battery_volume  # TODO: find proper unit and convertion
@@ -200,19 +201,23 @@ class RobotBase(Box):
                 sensor.distance = self._lidar_range
                 sensor.gameobject = None
 
-        # # Light emitter
-        # if self.light_switch:
-        #     query_result = self.body.space.point_query(
-        #         self.body.position, self._light_range, ray_filter
-        #     )
-        #     for result in query_result:
-        #         body: pymunk.Body = result.shape.body
-        #         robot: RobotBase = body.gameobject
-        #         if isinstance(robot, RobotBase):
-        #             distance = result.distance
-        #             angle = body.position.get_angle_between(self.body.position)
-        #             # Add the emitter to the sensor's detections
-        #             self.detectors.append(ILightData(distance, angle))
+        # Light emitter
+        if self.light_switch:
+            query_result = self.body.space.point_query(
+                self.body.position, self._light_range, ray_filter
+            )
+            for result in query_result:
+                body: pymunk.Body = result.shape.body
+                robot: RobotBase = body.gameobject
+                if isinstance(robot, RobotBase):
+                    distance = result.distance
+                    angle = calc_relative_angle(
+                        subject_pos=body.position,
+                        subject_angle=body.angle,
+                        target_pos=self.body.position,
+                    )
+                    # Add the emitter to the target's detections
+                    robot.light_detectors.append(ILightData(distance, angle))
 
         # Send message
         if self.message:
@@ -226,7 +231,7 @@ class RobotBase(Box):
                     self.received_messages.append(robot.message)
 
     def postupdate(self):
-        self.detectors.clear()
+        self.light_detectors.clear()
         self.received_messages.clear()
 
     def draw_sensors(self, screen):
@@ -263,6 +268,31 @@ class RobotBase(Box):
                 if isinstance(obj, RobotBase):
                     pygame.draw.circle(screen, (200, 0, 0), end_pos, 10)
 
+        # Draw light emitter
+        if self.light_switch:
+            x, y = pymunk_to_pygame_point(self.body.position, screen)
+            pygame.draw.circle(screen, (255, 255, 0), (x, y), self._light_range, 1)
+
+        # Draw light sensor
+        if self.light_detectors:
+            for light in self.light_detectors:
+                angle = self.body.angle + light.angle
+                direction = (
+                    np.cos(angle),
+                    np.sin(angle),
+                )
+                end_pos = (
+                    self.body.position[0] + direction[0] * light.distance,
+                    self.body.position[1] + direction[1] * light.distance,
+                )
+                pygame.draw.line(
+                    screen,
+                    (255, 255, 0),
+                    pymunk_to_pygame_point(self.body.position, screen),
+                    pymunk_to_pygame_point(end_pos, screen),
+                    2,
+                )
+
     def send_your_message(self):
         pass
         # todo: implement local communication
@@ -297,7 +327,7 @@ class RobotBase(Box):
         )
 
         # Draw sensors
-        # self.draw_sensors(surface)
+        self.draw_sensors(surface)
 
     def update(self):
         # todo change
