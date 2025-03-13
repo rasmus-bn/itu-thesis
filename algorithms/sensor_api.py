@@ -1,3 +1,6 @@
+from engine.types import IWaypointData
+
+
 class RobotSensorAPI:
 
     def __init__(self, robot):
@@ -15,6 +18,9 @@ class RobotSensorAPI:
 
     def get_received_messages(self) -> list[str]:
         return self._robot.get_received_messages()
+
+    def get_all_waypoints(self) -> [list[IWaypointData], int]:
+        return self._robot.sim.environment.get_all_waypoints()
 
 
 

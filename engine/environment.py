@@ -1,9 +1,12 @@
 import random
 from engine.objects import Circle, Box
+from engine.types import IWaypointData
 
 
 class Environment:
     def __init__(self, sim):
+        self.waypoint_distance = None
+        self.waypointData: list[IWaypointData] = None
         self.waypoints = None
         self.sim = sim
         self.homebase = HomeBase(sim.pixels_x // 2, sim.pixels_y // 2)
@@ -31,12 +34,21 @@ class Environment:
             self.sim.add_game_object(resource)
 
     def generate_waypoints(self, distance=10):
+        self.waypoint_distance = distance
         self.waypoints = []
+        self.waypointData = []
+        i = 0
         for x in range(0, self.sim.pixels_x, distance):
             for y in range(0, self.sim.pixels_y, distance):
                 waypoint = Waypoint(x, y)
+                waypointData = IWaypointData(position=(x,y), id=i)
+                self.waypointData.append(waypointData)
+                i += 1
                 self.waypoints.append(waypoint)
                 self.sim.add_game_object(waypoint)
+
+    def get_all_waypoints(self) -> [list[IWaypointData], int]:
+        return self.waypointData, self.waypoint_distance
 
     def handle_homebase_collision(self, arbiter, space):
         homebase_shape, resource_shape = arbiter.shapes  # Get colliding shapes
