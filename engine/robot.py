@@ -212,7 +212,8 @@ class RobotBase(Box):
                 body: pymunk.Body = result.shape.body
                 robot: RobotBase = body.gameobject
                 if isinstance(robot, RobotBase):
-                    distance = result.distance
+                    distance = body.position.get_distance(self.body.position)
+                    # distance = result.distance
                     angle = calc_relative_angle(
                         subject_pos=body.position,
                         subject_angle=body.angle,
