@@ -70,12 +70,14 @@ class SimulationBase:
             self.frame_count += 1
             # print(f"Frame {self.frame_count}")
 
+            # Physics
+            self.space.step(self.delta_time)
+
             # Update
             self._preupdate()
             self._update()
 
-            # Physics
-            self.space.step(self.delta_time)
+
 
             # Visualization
             if self.enable_display:
