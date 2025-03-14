@@ -33,17 +33,16 @@ class Environment:
             self.resources.append(resource)
             self.sim.add_game_object(resource)
 
-    def generate_waypoints(self, distance=10, x_count=5, y_count=5):
+    def generate_waypoints(self, distance=10, x_count=5, y_count=5, homebase_threshold=50):
         self.waypoint_distance = distance
         self.waypoints = []
         self.waypointData = []
         i = 0
-
         leftover_x = (self.sim.pixels_x - (x_count * distance)) // 2 + distance // 2 if self.sim.pixels_x // x_count > distance else 0
         leftover_y = (self.sim.pixels_y - (y_count * distance)) // 2 + distance // 2 if self.sim.pixels_y // y_count > distance else 0
         for x in range(leftover_x, leftover_x + (distance * x_count), distance):
             for y in range(leftover_y, leftover_y + (distance * y_count), distance):
-                waypoint = Waypoint(x, y)
+                waypoint = Waypoint(x, y, homebase_position=self.homebase.body.position, homebase_threshold=homebase_threshold)
                 waypointData = IWaypointData(position=(x,y), id=i)
                 self.waypointData.append(waypointData)
                 i += 1
@@ -76,9 +75,15 @@ class Environment:
 
 
 class Waypoint(Circle):
-    def __init__(self, x, y, radius=5, color=(40, 200, 40)):
+    def __init__(self, x, y, radius=5, color=(40, 200, 40), homebase_position=(0,0), homebase_threshold=50):
         super().__init__(x=x, y=y, radius=radius, color=color)
         self.shape.sensor = True
+        self.is_homebase = False
+        distance_to_homebase = self.body.position.get_distance(homebase_position)
+        if distance_to_homebase < homebase_threshold:
+            self.color = (255,255,255)
+            self.is_homebase = True
+
 
 
 class Resource(Circle):
