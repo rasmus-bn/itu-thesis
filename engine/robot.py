@@ -54,6 +54,8 @@ class RobotBase(Box):
         self.battery_capacity = battery_volume  # TODO: find proper unit and convertion
         self.motor_strength = motor_volume  # TODO: find proper unit and convertion
 
+        self.speedometer = 0
+
         self.battery_volume = battery_volume
         self.motor_volume = motor_volume
 
@@ -230,6 +232,9 @@ class RobotBase(Box):
                     # print(f"Robot {self} has {robot} in communication range {self._comms_range}")
                     self.received_messages.append(robot.message)
 
+        # # Update speedometer
+        # self.speedometer = np.linalg.norm(self.body.velocity)
+
     def postupdate(self):
         self.light_detectors.clear()
         self.received_messages.clear()
@@ -267,11 +272,6 @@ class RobotBase(Box):
                     pygame.draw.circle(screen, (200, 200, 0), end_pos, 10)
                 if isinstance(obj, RobotBase):
                     pygame.draw.circle(screen, (200, 0, 0), end_pos, 10)
-
-        # Draw light emitter
-        if self.light_switch:
-            x, y = pymunk_to_pygame_point(self.body.position, screen)
-            pygame.draw.circle(screen, (255, 255, 0), (x, y), self._light_range, 1)
 
         # Draw light sensor
         if self.light_detectors:
@@ -326,8 +326,16 @@ class RobotBase(Box):
             ],
         )
 
-        # Draw sensors
-        self.draw_sensors(surface)
+        # Draw light emitter
+        if self.light_switch:
+            x, y = pymunk_to_pygame_point(self.body.position, surface=surface)
+            pygame.draw.circle(
+                surface=surface,
+                color=(255, 255, 0),
+                center=(x, y),
+                radius=self._light_range,
+                width=1,
+            )
 
     def update(self):
         # todo change
