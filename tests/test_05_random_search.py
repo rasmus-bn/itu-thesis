@@ -18,7 +18,7 @@ RESOURCES_SIZE = 10
 sim = SimulationBase(pixels_x=SIZE_X, pixels_y=SIZE_Y, enable_realtime=True, enable_display=True)
 env = Environment(sim)
 env.generate_resources(RESOURCES_COUNT, radius=RESOURCES_SIZE)
-env.generate_waypoints(distance=100)
+env.generate_waypoints(distance=80, x_count=13, y_count=7)
 
 # Create 5 random robots
 for _ in range(ROBOT_COUNT):

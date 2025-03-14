@@ -33,13 +33,16 @@ class Environment:
             self.resources.append(resource)
             self.sim.add_game_object(resource)
 
-    def generate_waypoints(self, distance=10):
+    def generate_waypoints(self, distance=10, x_count=5, y_count=5):
         self.waypoint_distance = distance
         self.waypoints = []
         self.waypointData = []
         i = 0
-        for x in range(0, self.sim.pixels_x, distance):
-            for y in range(0, self.sim.pixels_y, distance):
+
+        leftover_x = (self.sim.pixels_x - (x_count * distance)) // 2 + distance // 2 if self.sim.pixels_x // x_count > distance else 0
+        leftover_y = (self.sim.pixels_y - (y_count * distance)) // 2 + distance // 2 if self.sim.pixels_y // y_count > distance else 0
+        for x in range(leftover_x, leftover_x + (distance * x_count), distance):
+            for y in range(leftover_y, leftover_y + (distance * y_count), distance):
                 waypoint = Waypoint(x, y)
                 waypointData = IWaypointData(position=(x,y), id=i)
                 self.waypointData.append(waypointData)
