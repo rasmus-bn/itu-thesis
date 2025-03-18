@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import pygame
 
 from algorithms.control_api import RobotControlAPI
@@ -6,7 +5,7 @@ from algorithms.sensor_api import RobotSensorAPI
 from engine.tether import Tether
 from engine.gpt_generated.closest_point_on_circle import closest_point_on_circle
 from engine.environment import Resource
-from engine.objects import Box, IGameObject
+from engine.objects import Box
 from engine.helpers import pymunk_to_pygame_point
 from sim_math.angles import calc_relative_angle
 import numpy as np
@@ -54,8 +53,6 @@ class RobotBase(Box):
         self.battery_capacity = battery_volume  # TODO: find proper unit and convertion
         self.motor_strength = motor_volume  # TODO: find proper unit and convertion
 
-        self.speedometer = 0
-
         self.battery_volume = battery_volume
         self.motor_volume = motor_volume
 
@@ -87,6 +84,10 @@ class RobotBase(Box):
             density=self._calc_robot_density(),
             virtual_height=self.side_length,
         )
+
+        # Speedometer
+        self.speedometer = 0
+        self.old_pos = self.body.position
 
         self._left_motor = 0
         self._right_motor = 0
@@ -212,7 +213,7 @@ class RobotBase(Box):
                 body: pymunk.Body = result.shape.body
                 robot: RobotBase = body.gameobject
                 if isinstance(robot, RobotBase):
-                    distance = body.position.get_distance(self.body.position)
+                    distance_cm = body.position.get_distance(self.body.position)
                     # distance = result.distance
                     angle = calc_relative_angle(
                         subject_pos=body.position,
@@ -220,7 +221,7 @@ class RobotBase(Box):
                         target_pos=self.body.position,
                     )
                     # Add the emitter to the target's detections
-                    robot.light_detectors.append(ILightData(distance, angle))
+                    robot.light_detectors.append(ILightData(distance_cm, angle))
 
         # Send message
         if self.message:
@@ -233,8 +234,10 @@ class RobotBase(Box):
                     # print(f"Robot {self} has {robot} in communication range {self._comms_range}")
                     self.received_messages.append(robot.message)
 
-        # # Update speedometer
-        # self.speedometer = np.linalg.norm(self.body.velocity)
+        # Update speedometer
+        distance_cm = self.body.position.get_distance(self.old_pos)
+        self.speedometer = self.sim.meta.convert_speed(cm_per_frame=distance_cm)
+        self.old_pos = self.body.position
 
     def postupdate(self):
         self.light_detectors.clear()
