@@ -7,6 +7,9 @@ Units of distances are:
 Units of mass is:
 `grams (g)`
 
+Unit of speed is:
+`km/h`
+
 ## Simulating the mass of 3D objects in the 2D game engine
 
 We can properly calculate the mass of a 3D object by multiplying the density with the height of the object.

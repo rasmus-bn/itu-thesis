@@ -6,11 +6,11 @@ import pymunk
 from engine.tether import Tether
 from engine.environment import Environment
 from engine.objects import IGameObject
+from sim_math.world_meta import WorldMeta
 
 
 @dataclass
 class SimulationBase:
-    world_scale: int = 10
     fps: int = 60
     enable_display: bool = True
     enable_realtime: bool = True
@@ -37,6 +37,14 @@ class SimulationBase:
         # Visualization
         self._display = None
         self._clock = None
+
+        # World meta data
+        self.meta: WorldMeta = WorldMeta(
+            fps=self.fps,
+            screen_width=self.pixels_x,
+            screen_height=self.pixels_y,
+            background_color=self.background_color,
+        )
 
     def _start(self):
         self.start_time = time()

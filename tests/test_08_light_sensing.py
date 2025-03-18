@@ -89,9 +89,8 @@ class ManualRobotBase(RobotBase):
             print(f"light: {self.light_switch}")
 
         self.set_motor_values(motor_left, motor_right)
-        # self.draw_sensors(sim._display)
-        colors = ["Red", "Blue"]
-        # print(f"{colors[self.num]} received: {self.get_received_messages()}")
+
+        print(f"Speedometer: {self.speedometer}")
 
 
 if __name__ == "__main__":
@@ -113,13 +112,13 @@ if __name__ == "__main__":
     )
     sim.add_game_object(manual_robot)
 
-    # Create manual robot 2 controlled by wasd keys
-    manual_robot = ManualRobotBase(
-        ignore_battery=True,
-        battery_capacity=100000,
-        motor_strength=100000,
-        position=(SIZE_X // 2, SIZE_Y // 2),
-    )
-    sim.add_game_object(manual_robot)
+    # # Create manual robot 2 controlled by wasd keys
+    # manual_robot = ManualRobotBase(
+    #     ignore_battery=True,
+    #     battery_capacity=100000,
+    #     motor_strength=100000,
+    #     position=(SIZE_X // 2, SIZE_Y // 2),
+    # )
+    # sim.add_game_object(manual_robot)
 
     sim.run()
