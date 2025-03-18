@@ -41,6 +41,7 @@ class RobotBase(Box):
         sensor_range: float = 50.0,
         controller: any = None,
         ignore_battery: bool = False,
+        robot_collision: bool = True
     ):
         self._comms_range = 50
         self.message: None | str = None
@@ -107,9 +108,11 @@ class RobotBase(Box):
         self.robot_group = RobotBase._robot_counter
         RobotBase._robot_counter += 1
 
+        robot_mask = 0b0001 if robot_collision else 0b0000
+
         self.shape.filter = pymunk.ShapeFilter(
             categories=0b0001,  # This object is a robot
-            mask=0b0001 | 0b0010 | 0b0100,  # Detects robots, obstacles, and goals
+            mask=robot_mask | 0b0010 | 0b0100,  # Detects robots, obstacles, and goals
             group=self.robot_group,  # Ignores itself
         )
 

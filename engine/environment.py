@@ -6,7 +6,7 @@ from engine.types import IWaypointData
 class Environment:
     def __init__(self, sim):
         self.waypoint_distance = None
-        self.waypointData: list[IWaypointData] = None
+        self.waypointData: list[IWaypointData] = []
         self.waypoints = None
         self.sim = sim
         self.homebase = HomeBase(sim.pixels_x // 2, sim.pixels_y // 2)
@@ -38,19 +38,44 @@ class Environment:
         self.waypoints = []
         self.waypointData = []
         i = 0
+        waypoint_map = {}  # Dictionary to store waypoints by their grid position
+
         leftover_x = (self.sim.pixels_x - (x_count * distance)) // 2 + distance // 2 if self.sim.pixels_x // x_count > distance else 0
         leftover_y = (self.sim.pixels_y - (y_count * distance)) // 2 + distance // 2 if self.sim.pixels_y // y_count > distance else 0
-        for x in range(leftover_x, leftover_x + (distance * x_count), distance):
-            for y in range(leftover_y, leftover_y + (distance * y_count), distance):
+
+        for grid_x in range(x_count):
+            for grid_y in range(y_count):
+                x = leftover_x + grid_x * distance
+                y = leftover_y + grid_y * distance
+
                 waypoint = Waypoint(x, y, homebase_position=self.homebase.body.position, homebase_threshold=homebase_threshold)
-                waypointData = IWaypointData(position=(x,y), id=i)
+                waypointData = IWaypointData(position=waypoint.body.position, id=i, neighbors={}, is_homebase=waypoint.is_homebase)
                 self.waypointData.append(waypointData)
+
+                waypoint_map[(grid_x, grid_y)] = waypointData
+
                 i += 1
                 self.waypoints.append(waypoint)
                 self.sim.add_game_object(waypoint)
 
-    def get_all_waypoints(self) -> [list[IWaypointData], int]:
-        return self.waypointData, self.waypoint_distance
+        # Assign neighbors
+        for grid_x in range(x_count):
+            for grid_y in range(y_count):
+                waypointData = waypoint_map[(grid_x, grid_y)]
+                neighbors = {
+                    "up": waypoint_map.get((grid_x, grid_y + 1)),
+                    "down": waypoint_map.get((grid_x, grid_y - 1)),
+                    "left": waypoint_map.get((grid_x - 1, grid_y)),
+                    "right": waypoint_map.get((grid_x + 1, grid_y))
+                }
+                # Remove None values (out of bounds neighbors)
+                # waypointData.neighbors = {k: v for k, v in neighbors.items() if v is not None}
+                waypointData.neighbors = neighbors
+    def get_all_waypoints(self) -> list[IWaypointData]:
+        return self.waypointData
+
+    def get_waypoint_distance(self) -> float:
+        return self.waypoint_distance
 
     def handle_homebase_collision(self, arbiter, space):
         homebase_shape, resource_shape = arbiter.shapes  # Get colliding shapes
@@ -75,15 +100,14 @@ class Environment:
 
 
 class Waypoint(Circle):
-    def __init__(self, x, y, radius=5, color=(40, 200, 40), homebase_position=(0,0), homebase_threshold=50):
+    def __init__(self, x, y, radius=5, color=(40, 200, 40), homebase_position=(0, 0), homebase_threshold=50):
         super().__init__(x=x, y=y, radius=radius, color=color)
         self.shape.sensor = True
         self.is_homebase = False
         distance_to_homebase = self.body.position.get_distance(homebase_position)
         if distance_to_homebase < homebase_threshold:
-            self.color = (255,255,255)
+            self.color = (255, 255, 255)
             self.is_homebase = True
-
 
 
 class Resource(Circle):

@@ -1,0 +1,5 @@
+To create a homogeneous colony:
+    1. set "total colony mass" to distribute (f.x. 100kg)
+    2. get a random "number of robots" in range (2-200)
+    3. get a random "motor to battery ration" in range (0.0 - 1.0)
+    4. distribute this mass equally among all robots

@@ -16,11 +16,17 @@ class RobotSensorAPI:
     def get_robot_angle(self) -> float:
         return self._robot.body.angle
 
+    def get_robot_position(self) -> float:
+        return self._robot.body.position
+
     def get_received_messages(self) -> list[str]:
         return self._robot.get_received_messages()
 
-    def get_all_waypoints(self) -> [list[IWaypointData], int]:
+    def get_all_waypoints(self) -> list[IWaypointData]:
         return self._robot.sim.environment.get_all_waypoints()
+
+    def get_waypoint_distance(self) -> float:
+        return self._robot.sim.environment.get_waypoint_distance()
 
     def get_robot_light_input(self) -> float:
         return self._robot.light_detectors.copy()
