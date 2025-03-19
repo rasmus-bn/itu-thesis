@@ -30,3 +30,6 @@ class RobotSensorAPI:
 
     def get_robot_light_input(self) -> float:
         return self._robot.light_detectors.copy()
+
+    def get_robot_speed(self) -> float:
+        return self._robot.speedometer
