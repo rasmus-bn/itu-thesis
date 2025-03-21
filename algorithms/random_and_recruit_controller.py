@@ -89,7 +89,7 @@ class RandomRecruitController(BaseController):
         # share path with other robots
         path_str = "retrieve:" + "|".join([waypoint.to_message() for waypoint in self.visited_waypoints])
         self.controls.set_message(message=path_str)
-        self.debug.print(message=path_str, pop_up=True)
+        # self.debug.print(message=path_str, pop_up=True)
 
         # compare to other paths
         messages = self.sensors.get_received_messages()
@@ -126,15 +126,18 @@ class RandomRecruitController(BaseController):
         self.move_to_target_waypoint()
 
     def join(self):
-        print("joining forces")
         lights = self.sensors.get_light_detectors()
         if not lights:
             return self.switch_state(RobotState.SEARCH)
 
         closest_light = min(lights, key=lambda x: x.distance)
-        global_light_angle = self.sensors.get_robot_angle() + closest_light.angle
-        self.target_waypoint = self.get_waypoint_by_angle(global_light_angle)
-        self.move_to_target_waypoint()
+
+        self.debug.clear_pop_up()
+        self.debug.print(str(closest_light.angle), pop_up=True)
+
+        # global_light_angle = self.sensors.get_robot_angle() + closest_light.angle
+        # self.target_waypoint = self.get_waypoint_by_angle(global_light_angle)
+        # self.move_to_target_waypoint()
 
     def get_random_waypoint(self) -> IWaypointData:
         directions = ["up", "down", "left", "right"]
