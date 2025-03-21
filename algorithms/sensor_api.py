@@ -1,3 +1,5 @@
+from pymunk import vec2d
+
 from engine.types import ILightData, IWaypointData
 
 
@@ -15,7 +17,7 @@ class RobotSensorAPI:
     def get_robot_angle(self) -> float:
         return self._robot.body.angle
 
-    def get_robot_position(self) -> float:
+    def get_robot_position(self) -> vec2d:
         return self._robot.body.position
 
     def get_received_messages(self) -> list[str]:
