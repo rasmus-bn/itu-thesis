@@ -1,7 +1,9 @@
 import pygame
 
 from algorithms.control_api import RobotControlAPI
+from algorithms.debug_api import RobotDebugAPI
 from algorithms.sensor_api import RobotSensorAPI
+from engine.debug_colors import IColor
 from engine.tether import Tether
 from engine.gpt_generated.closest_point_on_circle import closest_point_on_circle
 from engine.environment import Resource
@@ -10,8 +12,9 @@ from engine.helpers import pymunk_to_pygame_point
 from sim_math.angles import calc_relative_angle
 import numpy as np
 import pymunk
+from time import time
 
-from engine.types import ILidarData, ILightData
+from engine.types import DebugMessage, ILidarData, ILightData
 
 # Used for calculating the size of the robot
 BATTERY_SCALER = 1
@@ -40,7 +43,8 @@ class RobotBase(Box):
         sensor_range: float = 50.0,
         controller: any = None,
         ignore_battery: bool = False,
-        robot_collision: bool = True
+        robot_collision: bool = True,
+        debug_color: IColor = None,
     ):
         self._comms_range = 50
         self.message: None | str = None
@@ -57,9 +61,13 @@ class RobotBase(Box):
         self.battery_volume = battery_volume
         self.motor_volume = motor_volume
 
+        # Debugging
+        self.debug_color: IColor = debug_color
+        self.debug_messages: list[DebugMessage] = []
+
         # Battery remaining in the robot
         self.battery_remaining = self.battery_capacity  # TODO: Verify proper unit
-        self.up_color = color or (255, 0, 0)
+        self.up_color = color or debug_color.rgb or (255, 0, 0)
         die_color_scaler = 0.3
         self.down_color = (
             max(min(int(self.up_color[0] * die_color_scaler), 255), 0),
@@ -120,11 +128,12 @@ class RobotBase(Box):
         # Create API objects
         sensors = RobotSensorAPI(self)
         controls = RobotControlAPI(self)
+        debug = RobotDebugAPI(self)
 
         # Assign APIs to the controller
         self.controller = controller
         if controller:
-            self.controller.set_apis(sensors, controls)
+            self.controller.set_apis(sensors, controls, debug)
 
     def set_motor_values(self, left: float, right: float):
         # Clamp the values to -1, 1
@@ -156,7 +165,7 @@ class RobotBase(Box):
 
         self.tether = Tether(robot=self, resource=resource, resource_offset=offset)
         self.sim.add_tether(self.tether)
-        print(f"attached: {resource}")
+        self.print(f"attached: {resource}", pop_up=True)
 
     def detach_from_resource(self):
         if self.tether:
@@ -246,6 +255,24 @@ class RobotBase(Box):
         self.light_detectors.clear()
         self.received_messages.clear()
 
+        # Delete pop-up message after 5 seconds
+        while self.debug_messages:
+            oldest = self.debug_messages[0]
+            if time() < oldest.timestamp + 5:
+                break
+            self.debug_messages.pop(0)
+
+    def print(self, message: any, pop_up: bool = False):
+        # Print in terminal with color
+        if self.debug_color:
+            self.debug_color.print(message)
+        # Print normally
+        else:
+            print(message)
+        # Display in-game pop up text
+        if pop_up:
+            self.debug_messages.append(DebugMessage(message=message))
+
     def draw_sensors(self, screen):
         for sensor in self.ir_sensors:
             sensor_pos = self.body.position  # Robot's center
@@ -261,7 +288,9 @@ class RobotBase(Box):
             )
 
             # Choose color: RED if sensor detects an object, GREEN if nothing detected
-            color = (255, 0, 0) if sensor.distance < self._lidar_range else (0, 255, 0)
+            ray_color = (
+                (255, 0, 0) if sensor.distance < self._lidar_range else (0, 255, 0)
+            )
 
             # Convert Pymunk coordinates to Pygame coordinates
             start_pos = (int(sensor_pos[0]), int(sensor_pos[1]))
@@ -271,7 +300,7 @@ class RobotBase(Box):
             end_pos = pymunk_to_pygame_point(end_pos, screen)
 
             # Draw sensor ray
-            pygame.draw.line(screen, color, start_pos, end_pos, 2)
+            pygame.draw.line(screen, ray_color, start_pos, end_pos, 2)
 
             if sensor.gameobject is not None:
                 obj = sensor.gameobject
@@ -343,6 +372,25 @@ class RobotBase(Box):
                 radius=self._light_range,
                 width=1,
             )
+
+        # Display in-game text pop-up
+        if self.debug_messages:
+            font = pygame.font.SysFont(None, 24)
+            font_color = self.debug_color.rgb if self.debug_color else (255, 255, 255)
+            messages = self.debug_messages.copy()
+            messages.reverse()
+            messages = " | ".join([m.message for m in messages])
+            text_surface = font.render(str(messages), True, font_color)
+            text_rect = text_surface.get_rect()
+            text_pos = pymunk_to_pygame_point(
+                point=(
+                    self.body.position.x + self.side_length // 2 + 10,
+                    self.body.position.y,
+                ),
+                surface=surface,
+            )
+            text_rect.midleft = text_pos
+            surface.blit(text_surface, text_rect)
 
     def update(self):
         # todo change

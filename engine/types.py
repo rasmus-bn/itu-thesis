@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from time import time
 from pymunk import Vec2d
 from engine.objects import IGameObject
 
@@ -32,3 +33,9 @@ class IWaypointData:
         """Create an instance from a str message"""
         id, x, y, is_homebase = message.split(",")
         return cls(int(id), Vec2d(float(x), float(y)), {}, is_homebase == "True")
+
+
+class DebugMessage:
+    def __init__(self, message: any):
+        self.timestamp = time()
+        self.message: any = message

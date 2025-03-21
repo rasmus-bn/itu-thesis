@@ -12,6 +12,7 @@ pymunk = "^6.11.1"
 pygame = "^2.6.1"
 numpy = "^2.2.3"
 pytest = "^8.3.5"
+termcolor = "^2.5.0"
 
 [build-system]
 requires = ["poetry-core"]
