@@ -368,7 +368,21 @@ pluggy = ">=1.5,<2"
 [package.extras]
 dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
 
+[[package]]
+name = "termcolor"
+version = "2.5.0"
+description = "ANSI color formatting for output in terminal"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "termcolor-2.5.0-py3-none-any.whl", hash = "sha256:37b17b5fc1e604945c2642c872a3764b5d547a48009871aea3edd3afa180afb8"},
+    {file = "termcolor-2.5.0.tar.gz", hash = "sha256:998d8d27da6d48442e8e1f016119076b690d962507531df4890fcd2db2ef8a6f"},
+]
+
+[package.extras]
+tests = ["pytest", "pytest-cov"]
+
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "b231c8f7455cbd975af89bf43a6fd568e3f7f07cef11485f5e151e70c0e7349a"
+content-hash = "b670cac370aed8c3074aefc09f9aae57b28937903fb6e9b8869e87b5a6f20fb7"

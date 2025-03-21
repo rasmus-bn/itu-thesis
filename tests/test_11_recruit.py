@@ -1,5 +1,6 @@
 from random import uniform
 from algorithms.random_and_recruit_controller import RandomRecruitController
+from engine.debug_colors import Colors
 from engine.environment import Environment
 from engine.robot import RobotBase
 from engine.simulation import SimulationBase
@@ -41,6 +42,7 @@ for i in range(ROBOT_COUNT):
         controller=controller,
         ignore_battery=True,
         robot_collision=False,
+        debug_color=Colors.get_random_color(),
     )
     robot._comms_range = 300
     robot._light_range = 300
