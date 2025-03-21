@@ -4,7 +4,7 @@ from algorithms.PID import PID
 from algorithms.base_controller import BaseController
 from engine.environment import Resource
 from engine.types import IWaypointData
-from random import choice, uniform
+from random import choice, randint
 from sim_math.angles import normalize_angle
 
 
@@ -25,21 +25,25 @@ class RandomRecruitController(BaseController):
         self.visited_waypoints: list[IWaypointData] = []
         self.max_speed = 0.0
         self.RECRUITMENT_THRESHOLD = 1 / 5  # speed threshold where the robot will start recruiting
+        self.path_qualifier = None
         self.PID = PID(Kp=7, Ki=0.2, Kd=0.4)
         self.BASE_SPEED = 1.0
 
         # variables needed to be initialized
-        self.HOME_BASE_WAYPOINT = None
-        self.ALL_WAYPOINTS = None
-        self.WAYPOINT_GAP = None
+        self.HOME_BASE_WAYPOINT: IWaypointData = None
+        self.ALL_WAYPOINTS: list[IWaypointData] = None
+        self.WAYPOINTS_DICT: dict[str, IWaypointData] = None
+        self.WAYPOINT_GAP: float = None
 
     def robot_start(self):
         self.WAYPOINT_GAP = self.sensors.get_waypoint_distance()
         self.ALL_WAYPOINTS = self.sensors.get_all_waypoints()
+        self.WAYPOINTS_DICT = self.sensors.get_waypoints_dict()
         self.HOME_BASE_WAYPOINT = self.find_home_base_waypoint()
 
     def switch_state(self, state: RobotState):
         self.target_waypoint = None
+        self.path_qualifier = None
         self.state = state
 
     def robot_update(self):
@@ -87,31 +91,47 @@ class RandomRecruitController(BaseController):
             self.controls.disable_light()
 
         # share path with other robots
-        path_str = "retrieve:" + "|".join([waypoint.to_message() for waypoint in self.visited_waypoints])
-        self.controls.set_message(message=path_str)
-        self.debug.print(message=path_str, pop_up=True)
+        if self.path_qualifier is None:
+            self.path_qualifier = randint(0, 100_000)
+        msg_prefix = f"retrieve-path:{self.path_qualifier}:"
+        own_path_str = msg_prefix + ",".join(
+            [str(waypoint.id) for waypoint in self.visited_waypoints]
+        )
+        self.controls.set_message(message=own_path_str)
+        self.debug.print(message=own_path_str, pop_up=True)
 
         # compare to other paths
-        messages = self.sensors.get_received_messages()
-        for message in messages:
-            if message is None:
+        for message in self.sensors.get_received_messages():
+            # Ignore unless message contains a path different from its own
+            if (
+                not message
+                or not message.startswith("retrieve-path:")
+                or message == own_path_str
+            ):
                 continue
-            if message.startswith("retrieve:"):
-                if message == path_str: continue  # ignore if own path
-                message = message.replace("retrieve:", "")
 
-                # ignore if other robot got home
-                if message == "":
-                    continue
-                other_path = message.split("|")
-                other_path = [IWaypointData.from_message(wp) for wp in other_path]
-                if len(other_path) == len(self.visited_waypoints):
-                    if uniform(0, 1) > 0.2:
-                        print("Adopting other path, by chance")
-                        self.visited_waypoints = other_path
-                if len(other_path) < len(self.visited_waypoints):
-                    print("Adopting other path")
-                    self.visited_waypoints = other_path
+            other_path = message.split(":")[2].split(",")
+
+            # Ignore empty paths and paths that are longer than the current path
+            if not other_path or len(other_path) > len(self.visited_waypoints):
+                continue
+
+            other_qualifier = int(message.split(":")[1])
+            resolved_path = [
+                self.WAYPOINTS_DICT[int(waypoint_id)] for waypoint_id in other_path
+            ]
+
+            # Recieved shorter path
+            if len(resolved_path) < len(self.visited_waypoints):
+                self.debug.print(f"Adopting shorter path {other_qualifier}", True)
+                self.visited_waypoints = resolved_path
+                self.path_qualifier = other_qualifier
+            # Recieved different path with equal length
+            if len(resolved_path) == len(self.visited_waypoints):
+                if other_qualifier < self.path_qualifier:
+                    self.debug.print(f"Adopting equal path by qualifier {other_qualifier}", True)
+                    self.visited_waypoints = resolved_path
+                    self.path_qualifier = other_qualifier
 
         # when the state is first switched
         if self.target_waypoint is None:

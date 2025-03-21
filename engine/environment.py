@@ -71,8 +71,15 @@ class Environment:
                 # Remove None values (out of bounds neighbors)
                 # waypointData.neighbors = {k: v for k, v in neighbors.items() if v is not None}
                 waypointData.neighbors = neighbors
+
     def get_all_waypoints(self) -> list[IWaypointData]:
         return self.waypointData
+
+    def get_waypoints_dict(self) -> dict[str, IWaypointData]:
+        waypoint_dict = {}
+        for waypoint in self.waypointData:
+            waypoint_dict[waypoint.id] = waypoint
+        return waypoint_dict
 
     def get_waypoint_distance(self) -> float:
         return self.waypoint_distance

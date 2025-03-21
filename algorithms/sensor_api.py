@@ -26,6 +26,9 @@ class RobotSensorAPI:
     def get_all_waypoints(self) -> list[IWaypointData]:
         return self._robot.sim.environment.get_all_waypoints()
 
+    def get_waypoints_dict(self) -> dict[str, IWaypointData]:
+        return self._robot.sim.environment.get_waypoints_dict()
+
     def get_waypoint_distance(self) -> float:
         return self._robot.sim.environment.get_waypoint_distance()
 
