@@ -1,8 +1,7 @@
-from engine.types import IWaypointData
+from engine.types import ILightData, IWaypointData
 
 
 class RobotSensorAPI:
-
     def __init__(self, robot):
         self._robot = robot
 
@@ -28,7 +27,7 @@ class RobotSensorAPI:
     def get_waypoint_distance(self) -> float:
         return self._robot.sim.environment.get_waypoint_distance()
 
-    def get_robot_light_input(self) -> float:
+    def get_light_detectors(self) -> list[ILightData]:
         return self._robot.light_detectors.copy()
 
     def get_robot_speed(self) -> float:
