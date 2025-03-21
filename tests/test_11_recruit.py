@@ -10,8 +10,8 @@ SIZE_X = 1400
 SIZE_Y = 950
 MAX_SIZE = 20000
 ROBOT_COUNT = 15
-RESOURCES_COUNT = 10
-RESOURCES_SIZE = 70
+RESOURCES_COUNT = 5
+RESOURCES_SIZE = 150
 
 # test environment
 sim = SimulationBase(
@@ -41,7 +41,7 @@ for i in range(ROBOT_COUNT):
         angle=0,
         controller=controller,
         ignore_battery=True,
-        robot_collision=False,
+        robot_collision=True,
         debug_color=Colors.get_random_color(),
     )
     robot._comms_range = 300
