@@ -55,8 +55,8 @@ class RandomRecruitController(BaseController):
         self.controls.disable_light()
 
         # go home
-        if not self.target_waypoint:
-            self.visited_waypoints = []
+        if not self.visited_waypoints or not self.target_waypoint:
+            self.visited_waypoints.append(self.HOME_BASE_WAYPOINT)
             self.target_waypoint = self.HOME_BASE_WAYPOINT
 
         # check if a resource is found
@@ -89,6 +89,7 @@ class RandomRecruitController(BaseController):
         # share path with other robots
         path_str = "retrieve:" + "|".join([waypoint.to_message() for waypoint in self.visited_waypoints])
         self.controls.set_message(message=path_str)
+        self.debug.print(message=path_str, pop_up=True)
 
         # compare to other paths
         messages = self.sensors.get_received_messages()

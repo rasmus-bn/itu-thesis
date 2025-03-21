@@ -165,7 +165,6 @@ class RobotBase(Box):
 
         self.tether = Tether(robot=self, resource=resource, resource_offset=offset)
         self.sim.add_tether(self.tether)
-        self.print(f"attached: {resource}", pop_up=True)
 
     def detach_from_resource(self):
         if self.tether:
