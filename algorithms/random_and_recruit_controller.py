@@ -28,6 +28,7 @@ class RandomRecruitController(BaseController):
         self.path_qualifier = None
         self.PID = PID(Kp=7, Ki=0.2, Kd=0.4)
         self.BASE_SPEED = 1.0
+        self.show_pop_ups = False
 
         # variables needed to be initialized
         self.HOME_BASE_WAYPOINT: IWaypointData = None
@@ -45,6 +46,7 @@ class RandomRecruitController(BaseController):
         self.target_waypoint = None
         self.path_qualifier = None
         self.state = state
+        self.controls.set_message(None)
 
     def robot_update(self):
         self.max_speed = max(self.max_speed, self.sensors.get_robot_speed())  # update max speed
@@ -82,6 +84,11 @@ class RandomRecruitController(BaseController):
         self.move_to_target_waypoint()
 
     def retrieve(self):
+
+        # when the state is first switched
+        if self.target_waypoint is None:
+            self.target_waypoint = self.get_next_waypoint_home()
+
         robot_position = self.sensors.get_robot_position()
 
         # recruit other robots
@@ -94,11 +101,11 @@ class RandomRecruitController(BaseController):
         if self.path_qualifier is None:
             self.path_qualifier = randint(0, 100_000)
         msg_prefix = f"retrieve-path:{self.path_qualifier}:"
-        own_path_str = msg_prefix + ",".join(
-            [str(waypoint.id) for waypoint in self.visited_waypoints]
-        )
+        full_path =  [str(waypoint.id) for waypoint in self.visited_waypoints]
+        full_path.append(str(self.target_waypoint.id))
+        own_path_str = msg_prefix + ",".join(full_path)
         self.controls.set_message(message=own_path_str)
-        self.debug.print(message=own_path_str, pop_up=True)
+        self.debug.print(message=own_path_str, pop_up=self.show_pop_ups)
 
         # compare to other paths
         for message in self.sensors.get_received_messages():
@@ -113,7 +120,7 @@ class RandomRecruitController(BaseController):
             other_path = message.split(":")[2].split(",")
 
             # Ignore empty paths and paths that are longer than the current path
-            if not other_path or len(other_path) > len(self.visited_waypoints):
+            if not other_path or len(other_path) > len(full_path):
                 continue
 
             other_qualifier = int(message.split(":")[1])
@@ -122,20 +129,18 @@ class RandomRecruitController(BaseController):
             ]
 
             # Recieved shorter path
-            if len(resolved_path) < len(self.visited_waypoints):
-                self.debug.print(f"Adopting shorter path {other_qualifier}", True)
+            if len(resolved_path) < len(full_path):
+                self.debug.print(f"Adopting shorter path {other_qualifier}", self.show_pop_ups)
                 self.visited_waypoints = resolved_path
                 self.path_qualifier = other_qualifier
+                self.target_waypoint = self.get_next_waypoint_home()
             # Recieved different path with equal length
-            if len(resolved_path) == len(self.visited_waypoints):
+            if len(resolved_path) == len(full_path):
                 if other_qualifier < self.path_qualifier:
-                    self.debug.print(f"Adopting equal path by qualifier {other_qualifier}", True)
+                    self.debug.print(f"Adopting equal path by qualifier {other_qualifier}", self.show_pop_ups)
                     self.visited_waypoints = resolved_path
                     self.path_qualifier = other_qualifier
-
-        # when the state is first switched
-        if self.target_waypoint is None:
-            self.target_waypoint = self.get_next_waypoint_home()
+                    self.target_waypoint = self.get_next_waypoint_home()
 
         # move to next waypoint on the way to home base
         if self.target_waypoint.position.get_distance(robot_position) < self.WAYPOINT_GAP // 4:

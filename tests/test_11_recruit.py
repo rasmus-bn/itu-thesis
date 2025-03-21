@@ -6,11 +6,11 @@ from engine.robot import RobotBase
 from engine.simulation import SimulationBase
 
 # Settings
-SIZE_X = 1280
-SIZE_Y = 720
+SIZE_X = 1400
+SIZE_Y = 950
 MAX_SIZE = 20000
-ROBOT_COUNT = 10
-RESOURCES_COUNT = 1
+ROBOT_COUNT = 15
+RESOURCES_COUNT = 10
 RESOURCES_SIZE = 70
 
 # test environment

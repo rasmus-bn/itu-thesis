@@ -9,7 +9,7 @@ class BaseController(ABC):
     def __init__(self):
         self.sensors: RobotSensorAPI | None = None
         self.controls: RobotControlAPI | None = None
-        self.controls: RobotDebugAPI | None = None
+        self.debug: RobotDebugAPI | None = None
         self.robot_is_initialized = False
         
 
