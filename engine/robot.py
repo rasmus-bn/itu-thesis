@@ -270,6 +270,9 @@ class RobotBase(Box):
             print(message)
         # Display in-game pop up text
         if pop_up:
+            latest = self.debug_messages[-1] if self.debug_messages else None
+            if latest and latest.message == message:
+                return
             self.debug_messages.append(DebugMessage(message=message))
 
     def draw_sensors(self, screen):
