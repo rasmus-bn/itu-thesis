@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum, auto
 from time import time
 from pymunk import Vec2d
 from engine.objects import IGameObject
@@ -39,3 +40,14 @@ class DebugMessage:
     def __init__(self, message: any):
         self.timestamp = time()
         self.message: any = message
+
+
+class Direction(Enum):
+    NORTH = auto()
+    NORTH_EAST = auto()
+    EAST = auto()
+    SOUTH_EAST = auto()
+    SOUTH = auto()
+    SOUTH_WEST = auto()
+    WEST = auto()
+    NORTH_WEST = auto()
