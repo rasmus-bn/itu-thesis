@@ -64,8 +64,15 @@ class SimulationBase:
         # Visualization
         if self.enable_display:
             pygame.quit()
-
+    
     def run(self):
+        try:
+            self._run()
+        except KeyboardInterrupt:
+            self._quit()
+            return
+
+    def _run(self):
         self._start()
         last_time = pygame.time.get_ticks()
         while True:
