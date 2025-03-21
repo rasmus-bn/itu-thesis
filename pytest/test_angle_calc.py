@@ -1,15 +1,42 @@
 import math
 import pytest
-from sim_math.angles import calc_relative_angle
+from sim_math.angles import calc_relative_angle, calc_waypoint_dir_from_angle
+from engine.types import Direction
+
+PI = math.pi
+FULL_CIRCLE = 2 * PI
+
+dir_test_data = [
+    (0 * PI, Direction.EAST),
+    (0.1 * PI, Direction.EAST),
+    (0.3 * PI, Direction.NORTH),
+    (1.1 * PI, Direction.WEST),
+    (1.4 * PI, Direction.SOUTH),
+    (2 * PI, Direction.EAST),
+    (-0.1 * PI, Direction.EAST),
+    (-0.1 * PI + (6 * FULL_CIRCLE), Direction.EAST),
+]
+
+
+@pytest.mark.parametrize("angle,expected_dir", dir_test_data)
+def test_calc_waypoint_dir_from_angle(angle, expected_dir):
+    # Arrange
+    pass
+
+    # Act
+    actual = calc_waypoint_dir_from_angle(angle)
+
+    # Assert
+    assert actual == expected_dir
 
 
 # Subject direction
 class SubjectDir:
     RIGHT_0 = 0
-    RIGHT = math.pi * 2
-    UP = math.pi * 0.5
-    LEFT = math.pi
-    DOWN = math.pi * 1.5
+    RIGHT = PI * 2
+    UP = PI * 0.5
+    LEFT = PI
+    DOWN = PI * 1.5
 
 
 class TargetPos:

@@ -1,5 +1,7 @@
 import math
 
+from engine.types import Direction
+
 
 def normalize_angle(angle):
     """Normalize an angle to be between 0 and 2pi"""
@@ -29,6 +31,13 @@ def calc_relative_angle(subject_pos, subject_angle, target_pos):
     if normalized_angle > math.pi:
         return normalized_angle - 2 * math.pi
     return normalized_angle
+
+def calc_waypoint_dir_from_angle(angle: float) -> Direction:
+    """Return the direction of a waypoint based on the angle"""
+    angle = normalize_angle(angle)
+    dirs = [Direction.EAST, Direction.NORTH, Direction.WEST, Direction.SOUTH]
+    direction = dirs[int((angle + (math.pi / 4)) // (math.pi / 2)) % 4]
+    return direction
 
 
 if __name__ == "__main__":
