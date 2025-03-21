@@ -2,6 +2,9 @@ from engine.environment import Environment, Resource
 from engine.robot import RobotBase
 from engine.simulation import SimulationBase
 import pygame
+import math
+
+from sim_math.angles import normalize_angle
 
 SIZE_X = 1280
 SIZE_Y = 720
@@ -90,7 +93,31 @@ class ManualRobotBase(RobotBase):
 
         self.set_motor_values(motor_left, motor_right)
 
-        print(f"Speedometer: {self.speedometer}")
+        # print(f"Speedometer: {self.speedometer}")
+
+        def get_waypoint_by_angle(angle: float):
+            angle = normalize_angle(angle)
+            dirs = ["right", "up", "left", "down"]
+            direction = dirs[int((angle + (math.pi / 4)) // (math.pi / 2)) % 4]
+            print(direction)
+            # print(len(self.visited_waypoints))
+            # neighbor = self.visited_waypoints[-1].neighbors.get(direction)
+            # if neighbor is None:
+            #     print("Falling back to random waypoint")
+            #     neighbor = self.get_random_waypoint()
+            # return neighbor
+
+        lights = self.light_detectors.copy()
+        if not lights:
+            pass
+
+        else:
+            closest_light = min(lights, key=lambda x: x.distance)
+            global_light_angle = self.body.angle + closest_light.angle
+            get_waypoint_by_angle(global_light_angle)
+            # self.target_waypoint = self.get_waypoint_by_angle(global_light_angle)
+            # self.move_to_target_waypoint()
+            # print(closest_light.angle)
 
 
 if __name__ == "__main__":
@@ -112,13 +139,13 @@ if __name__ == "__main__":
     )
     sim.add_game_object(manual_robot)
 
-    # # Create manual robot 2 controlled by wasd keys
-    # manual_robot = ManualRobotBase(
-    #     ignore_battery=True,
-    #     battery_capacity=100000,
-    #     motor_strength=100000,
-    #     position=(SIZE_X // 2, SIZE_Y // 2),
-    # )
-    # sim.add_game_object(manual_robot)
+    # Create manual robot 2 controlled by wasd keys
+    manual_robot = ManualRobotBase(
+        ignore_battery=True,
+        battery_capacity=100000,
+        motor_strength=100000,
+        position=(SIZE_X // 2, SIZE_Y // 2),
+    )
+    sim.add_game_object(manual_robot)
 
     sim.run()

@@ -67,7 +67,12 @@ class RobotBase(Box):
 
         # Battery remaining in the robot
         self.battery_remaining = self.battery_capacity  # TODO: Verify proper unit
-        self.up_color = color or debug_color.rgb or (255, 0, 0)
+
+        self.up_color = color or (255, 0, 0)
+
+        if debug_color:
+            self.up_color = debug_color.rgb
+
         die_color_scaler = 0.3
         self.down_color = (
             max(min(int(self.up_color[0] * die_color_scaler), 255), 0),

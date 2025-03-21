@@ -76,7 +76,7 @@ class RandomRecruitController(BaseController):
             self.target_waypoint = self.get_random_waypoint()
 
         # check if recruited
-        if self.sensors.get_light_detectors() and len(self.visited_waypoints) != 0:
+        if self.sensors.get_light_detectors() and len(self.visited_waypoints) > 0:
             return self.switch_state(RobotState.JOIN)
 
         self.move_to_target_waypoint()
@@ -146,14 +146,32 @@ class RandomRecruitController(BaseController):
         self.move_to_target_waypoint()
 
     def join(self):
-        print("joining forces")
+        robot_position = self.sensors.get_robot_position()
         lights = self.sensors.get_light_detectors()
+
+        # check if a resource is found
+        lidar_data = self.sensors.get_lidar()
+        for sensor in lidar_data:
+            if isinstance(sensor.gameobject, Resource):
+                self.controls.attach_to_resource(sensor.gameobject)
+                return self.switch_state(RobotState.RETRIEVE)
+
+        # if the robot no longer sees the light, continue searching
         if not lights:
             return self.switch_state(RobotState.SEARCH)
 
         closest_light = min(lights, key=lambda x: x.distance)
         global_light_angle = self.sensors.get_robot_angle() + closest_light.angle
-        self.target_waypoint = self.get_waypoint_by_angle(global_light_angle)
+
+        # when first switched state
+        if not self.target_waypoint:
+            self.target_waypoint = self.get_waypoint_by_angle(global_light_angle)
+
+        # if arrived at waypoint get a new one
+        if self.target_waypoint.position.get_distance(robot_position) < self.WAYPOINT_GAP // 4:
+            self.visited_waypoints.append(self.target_waypoint)
+            self.target_waypoint = self.get_waypoint_by_angle(global_light_angle)
+
         self.move_to_target_waypoint()
 
     def get_random_waypoint(self) -> IWaypointData:
@@ -180,7 +198,7 @@ class RandomRecruitController(BaseController):
         angle = normalize_angle(angle)
         dirs = ["right", "up", "left", "down"]
         direction = dirs[int((angle + (math.pi / 4)) // (math.pi / 2)) % 4]
-        print(len(self.visited_waypoints))
+
         neighbor = self.visited_waypoints[-1].neighbors.get(direction)
         if neighbor is None:
             print("Falling back to random waypoint")
