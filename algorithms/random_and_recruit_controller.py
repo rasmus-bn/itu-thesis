@@ -24,22 +24,19 @@ class RandomRecruitController(BaseController):
         self.target_waypoint: IWaypointData | None = None
         self.visited_waypoints: list[IWaypointData] = []
         self.max_speed = 0.0
+        self.RECRUITMENT_THRESHOLD = 1 / 5  # speed threshold where the robot will start recruiting
+        self.PID = PID(Kp=7, Ki=0.2, Kd=0.4)
+        self.BASE_SPEED = 1.0
 
         # variables needed to be initialized
         self.HOME_BASE_WAYPOINT = None
-        self.BASE_SPEED = None
         self.ALL_WAYPOINTS = None
-        self.WAYPOINT_DISTANCE = None
-        self.RECRUITMENT_THRESHOLD = None
-        self.PID = None
+        self.WAYPOINT_GAP = None
 
     def robot_start(self):
-        self.PID = PID(Kp=7, Ki=0.2, Kd=0.4)
-        self.RECRUITMENT_THRESHOLD = 1 / 5  # speed threshold where the robot will start recruiting
-        self.WAYPOINT_DISTANCE = self.sensors.get_waypoint_distance()
+        self.WAYPOINT_GAP = self.sensors.get_waypoint_distance()
         self.ALL_WAYPOINTS = self.sensors.get_all_waypoints()
         self.HOME_BASE_WAYPOINT = self.find_home_base_waypoint()
-        self.BASE_SPEED = 1.0
 
     def switch_state(self, state: RobotState):
         self.target_waypoint = None
@@ -57,10 +54,10 @@ class RandomRecruitController(BaseController):
         robot_position = self.sensors.get_robot_position()
         self.controls.disable_light()
 
-        # go home if not target
+        # go home
         if not self.target_waypoint:
-            self.target_waypoint = self.HOME_BASE_WAYPOINT
             self.visited_waypoints = []
+            self.target_waypoint = self.HOME_BASE_WAYPOINT
 
         # check if a resource is found
         lidar_data = self.sensors.get_lidar()
@@ -70,7 +67,7 @@ class RandomRecruitController(BaseController):
                 return self.switch_state(RobotState.RETRIEVE)
 
         # if arrived at the waypoint, get new waypoint
-        if self.target_waypoint.position.get_distance(robot_position) < self.WAYPOINT_DISTANCE // 4:
+        if self.target_waypoint.position.get_distance(robot_position) < self.WAYPOINT_GAP // 4:
             self.visited_waypoints.append(self.target_waypoint)
             self.target_waypoint = self.get_random_waypoint()
 
@@ -120,7 +117,7 @@ class RandomRecruitController(BaseController):
             self.target_waypoint = self.get_next_waypoint_home()
 
         # move to next waypoint on the way to home base
-        if self.target_waypoint.position.get_distance(robot_position) < self.WAYPOINT_DISTANCE // 4:
+        if self.target_waypoint.position.get_distance(robot_position) < self.WAYPOINT_GAP // 4:
             if len(self.visited_waypoints) == 0:
                 return self.switch_state(RobotState.SEARCH)
             self.target_waypoint = self.get_next_waypoint_home()
