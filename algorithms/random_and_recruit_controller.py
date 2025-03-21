@@ -18,6 +18,7 @@ ONE_AND_THREE_QUATER_PI = 1 + THREE_QUATER_PI
 class RobotState(Enum):
     WAIT = auto()
     SEARCH = auto()
+    JOINING_FORCE = auto()
     RETRIEVE = auto()
 
 
@@ -40,6 +41,7 @@ class RandomRecruitController(BaseController):
 
         # speed threshold where the robot will start recruiting
         self.recruitment_threshold = 1 / 5
+
 
     def update(self):
         assert self.sensors and self.controls
@@ -101,51 +103,20 @@ class RandomRecruitController(BaseController):
 
         return neighbor
 
-    def search(self):
+    def join_force(self):
         self.controls.disable_light()
-        waypoint_distance = self.sensors.get_waypoint_distance()
-        all_waypoints = self.sensors.get_all_waypoints()
-        robot_position = self.sensors.get_robot_position()
 
-        # find at least one homebase target
-        if not self.target_waypoint:
-            print("Set base waypoint")
-            for waypoint in all_waypoints:
-                if waypoint.is_homebase:
-                    self.target_waypoint = waypoint
-                    self.visited_waypoints = []
-                    self.visited_waypoints.append(waypoint)
-                    break
-        assert self.target_waypoint is not None
-
+    def detect_resource(self) -> Resource | None:
         # Check for resources in lidar
         lidar_data = self.sensors.get_lidar()
         for sensor in lidar_data:
             if isinstance(
                 sensor.gameobject, Resource
             ):  # and len(sensor.gameobject.constraints) == 0
-                self.controls.attach_to_resource(sensor.gameobject)
-                self.state = RobotState.RETRIEVE
-                return
+                return sensor.gameobject
+        return None
 
-        if (
-            self.target_waypoint.position.get_distance(robot_position)
-            < waypoint_distance // 4
-        ):
-            # if len(self.visited_waypoints) >= 50:
-            #     self.state = RobotState.RETRIEVE
-            #     self.target_waypoint = None
-            #     return
-            self.target_waypoint = self.get_random_waypoint()
-
-        # check for call for help
-        lights = self.sensors.get_light_detectors()
-        if lights:
-            closest_light = min(lights, key=lambda x: x.distance)
-            print("joining forces")
-            global_light_angle = self.sensors.get_robot_angle() + closest_light.angle
-            self.target_waypoint = self.get_waypoint_by_angle(global_light_angle)
-
+    def move_toward_waypoint(self):
         # Compute direction vectors
         robot_pos = self.sensors.get_robot_position()
         direction_to_target = self.target_waypoint.position - robot_pos
@@ -172,6 +143,50 @@ class RandomRecruitController(BaseController):
 
         # Apply motor values
         self.controls.set_motor_values(left_motor, right_motor)
+
+    def search(self):
+        self.controls.disable_light()
+        waypoint_distance = self.sensors.get_waypoint_distance()
+        all_waypoints = self.sensors.get_all_waypoints()
+        robot_position = self.sensors.get_robot_position()
+
+        # find at least one homebase target
+        if not self.target_waypoint:
+            print("Set base waypoint")
+            for waypoint in all_waypoints:
+                if waypoint.is_homebase:
+                    self.target_waypoint = waypoint
+                    self.visited_waypoints = []
+                    self.visited_waypoints.append(waypoint)
+                    break
+        assert self.target_waypoint is not None
+
+        # Check for resources in lidar
+        resource = self.detect_resource()
+        if resource:
+            self.controls.attach_to_resource(resource)
+            self.state = RobotState.RETRIEVE
+            return
+
+        if (
+            self.target_waypoint.position.get_distance(robot_position)
+            < waypoint_distance // 4
+        ):
+            if len(self.visited_waypoints) >= 50:
+                self.state = RobotState.RETRIEVE
+                self.target_waypoint = None
+                return
+            self.target_waypoint = self.get_random_waypoint()
+
+        # check for call for help
+        lights = self.sensors.get_light_detectors()
+        if lights:
+            closest_light = min(lights, key=lambda x: x.distance)
+            print("joining forces")
+            global_light_angle = self.sensors.get_robot_angle() + closest_light.angle
+            self.target_waypoint = self.get_waypoint_by_angle(global_light_angle)
+
+        self.move_toward_waypoint()
 
     def get_next_waypoint_home(self):
         new_target_waypoint = self.visited_waypoints.pop()
@@ -233,29 +248,4 @@ class RandomRecruitController(BaseController):
                 return
             self.target_waypoint = self.get_next_waypoint_home()
 
-        # Compute direction vectors
-        robot_pos = self.sensors.get_robot_position()
-        direction_to_target = self.target_waypoint.position - robot_pos
-
-        # Compute absolute angles
-        target_angle = direction_to_target.angle
-        robot_angle = self.sensors.get_robot_angle()
-
-        # Compute angle differences
-        angle_to_target = target_angle - robot_angle
-
-        # Normalize angles to [-π, π]
-        angle_to_target = (angle_to_target + math.pi) % (2 * math.pi) - math.pi
-
-        # Compute PID correction
-        control = self.pid.compute(angle_to_target)
-
-        # Convert control signal into motor values
-        base_speed = 1.0  # Max forward speed
-        turn = max(-1, min(1, control))  # Clamp turn value to [-1, 1]
-
-        left_motor = base_speed - turn
-        right_motor = base_speed + turn
-
-        # Apply motor values
-        self.controls.set_motor_values(left_motor, right_motor)
+        self.move_toward_waypoint()
