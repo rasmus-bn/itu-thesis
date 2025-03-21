@@ -8,11 +8,25 @@ class BaseController(ABC):
     def __init__(self):
         self.sensors: RobotSensorAPI | None = None
         self.controls: RobotControlAPI | None = None
+        self.robot_is_initialized = False
 
     def set_apis(self, sensors, controls):
         self.sensors = sensors
         self.controls = controls
 
     @abstractmethod
-    def update(self):
+    def robot_start(self):
         pass
+
+    @abstractmethod
+    def robot_update(self):
+        pass
+
+    def update(self):
+        assert self.sensors and self.controls
+
+        if not self.robot_is_initialized:
+            self.robot_start()
+            self.robot_is_initialized = True
+
+        self.robot_update()
