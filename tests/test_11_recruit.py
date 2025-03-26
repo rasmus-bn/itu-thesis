@@ -19,9 +19,9 @@ sim = SimulationBase(
 )
 env = Environment(sim)
 env.generate_resources(count=RESOURCES_COUNT, radius=RESOURCES_SIZE)
-env.generate_waypoints(distance=80, x_count=15, y_count=15, homebase_threshold=50)
+env.generate_waypoints(distance=80, x_count=10, y_count=9, homebase_threshold=50)
 
-center = (SIZE_X // 2, SIZE_Y // 2)
+center = (0, 0)
 
 
 for i in range(ROBOT_COUNT):

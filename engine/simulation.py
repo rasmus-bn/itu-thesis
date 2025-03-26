@@ -92,10 +92,11 @@ class SimulationBase:
             self._preupdate()
             self._update()
 
-
-
             # Visualization
             if self.enable_display:
+                # Move camera
+                self._update_camera()
+
                 # Quit on exit
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -133,6 +134,41 @@ class SimulationBase:
             for tether in self._tethers:
                 tether.draw(self._display)
 
+            # Draw camera position in lower-left corner
+            font = pygame.font.SysFont(None, 24)
+            cam_x, cam_y = self.meta.camera_offset
+            cam_text = font.render(f"Cam: ({int(cam_x)}, {int(cam_y)}) Zoom: {self.meta.camera_scale:.2f}", True, (200, 200, 200))
+
+            text_rect = cam_text.get_rect()
+            text_rect.bottomleft = (10, self._display.get_height() - 10)
+            self._display.blit(cam_text, text_rect)
+
+    def _update_camera(self):
+        keys = pygame.key.get_pressed()  # Get key states
+        controlSchemes = [
+            {
+                "up": keys[pygame.K_UP],
+                "down": keys[pygame.K_DOWN],
+                "left": keys[pygame.K_LEFT],
+                "right": keys[pygame.K_RIGHT],
+                "space": keys[pygame.K_SPACE],
+                "zoom_in": keys[pygame.K_p],
+                "zoom_out": keys[pygame.K_o]
+            }
+        ]
+
+        if controlSchemes[0]["up"]:  # Move Forward
+            self.meta.camera_offset[1] += self.meta.CAMERA_MOVE_SPEED
+        if controlSchemes[0]["down"]:
+            self.meta.camera_offset[1] -= self.meta.CAMERA_MOVE_SPEED
+        if controlSchemes[0]["right"]:
+            self.meta.camera_offset[0] += self.meta.CAMERA_MOVE_SPEED
+        if controlSchemes[0]["left"]:
+            self.meta.camera_offset[0] -= self.meta.CAMERA_MOVE_SPEED
+        if controlSchemes[0]["zoom_in"]:
+            self.meta.camera_scale *= self.meta.CAMERA_ZOOM_SPEED
+        if controlSchemes[0]["zoom_out"]:
+            self.meta.camera_scale /= self.meta.CAMERA_ZOOM_SPEED
 
     def add_game_object(self, obj: IGameObject):
         obj.sim = self

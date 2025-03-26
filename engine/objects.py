@@ -4,7 +4,6 @@ from pygame import Surface
 import pygame
 import pymunk
 
-from engine.helpers import pymunk_to_pygame_point
 from typing import TYPE_CHECKING
 if TYPE_CHECKING: from engine.simulation import SimulationBase
 
@@ -86,7 +85,7 @@ class Box(IGameObject):
 
         for vertex in vertices:
             rotated_point = self.body.local_to_world(vertex)
-            points.append(pymunk_to_pygame_point(rotated_point, surface))
+            points.append(self.sim.meta.pymunk_to_pygame_point(rotated_point, surface))
 
         # Draw the polygon
         pygame.draw.polygon(surface, self.color, points)
@@ -116,10 +115,10 @@ class Circle(IGameObject):
         self.shape.density = self.density_3d
 
     def draw(self, surface):
-        x, y = pymunk_to_pygame_point(self.body.position, surface)
+        x, y = self.sim.meta.pymunk_to_pygame_point(self.body.position, surface)
         pygame.draw.circle(
             surface,
             self.color,
             (int(x), int(y)),
-            int(self.radius),
+            self.sim.meta.pymunk_to_pygame_scale(self.radius),
         )
