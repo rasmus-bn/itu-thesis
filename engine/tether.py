@@ -2,7 +2,6 @@ from pygame import Surface
 import pygame
 import pymunk
 from pymunk import Vec2d
-from engine.helpers import pymunk_to_pygame_point
 from engine.objects import IGameObject
 
 
@@ -31,11 +30,7 @@ class Tether:
         pygame.draw.line(
             surface=surface,
             color=(80, 80, 80),
-            start_pos=pymunk_to_pygame_point(
-                point=self.robot.body.local_to_world(self.robot_offset), surface=surface
-            ),
-            end_pos=pymunk_to_pygame_point(
-                point=self.resource.body.local_to_world(self.resource_offset), surface=surface
-            ),
+            start_pos=self.robot.sim.meta.pymunk_to_pygame_point(self.robot.body.local_to_world(self.robot_offset), surface),
+            end_pos=self.robot.sim.meta.pymunk_to_pygame_point(self.resource.body.local_to_world(self.resource_offset), surface),
             width=3,
         )

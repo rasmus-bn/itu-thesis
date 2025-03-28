@@ -8,7 +8,6 @@ from engine.tether import Tether
 from engine.gpt_generated.closest_point_on_circle import closest_point_on_circle
 from engine.environment import Resource
 from engine.objects import Box
-from engine.helpers import pymunk_to_pygame_point
 from sim_math.angles import calc_relative_angle
 import numpy as np
 import pymunk
@@ -303,8 +302,8 @@ class RobotBase(Box):
             start_pos = (int(sensor_pos[0]), int(sensor_pos[1]))
             end_pos = (int(sensor_end[0]), int(sensor_end[1]))
 
-            start_pos = pymunk_to_pygame_point(start_pos, screen)
-            end_pos = pymunk_to_pygame_point(end_pos, screen)
+            start_pos = self.sim.meta.pymunk_to_pygame_point(start_pos, screen)
+            end_pos = self.sim.meta.pymunk_to_pygame_point(end_pos, screen)
 
             # Draw sensor ray
             pygame.draw.line(screen, ray_color, start_pos, end_pos, 2)
@@ -331,8 +330,8 @@ class RobotBase(Box):
                 pygame.draw.line(
                     screen,
                     (255, 255, 0),
-                    pymunk_to_pygame_point(self.body.position, screen),
-                    pymunk_to_pygame_point(end_pos, screen),
+                    self.sim.meta.pymunk_to_pygame_point(self.body.position, screen),
+                    self.sim.meta.pymunk_to_pygame_point(end_pos, screen),
                     2,
                 )
 
@@ -346,11 +345,14 @@ class RobotBase(Box):
         # Draw wheels
         left = self.body.local_to_world(self._wheel_pos_left)
         right = self.body.local_to_world(self._wheel_pos_right)
+
+
+
         pygame.draw.circle(
-            surface, (0, 0, 0), pymunk_to_pygame_point(left, surface), self._wheel_size
+            surface, (0, 0, 0), self.sim.meta.pymunk_to_pygame_point(left, surface), self.sim.meta.pymunk_to_pygame_scale(self._wheel_size)
         )
         pygame.draw.circle(
-            surface, (0, 0, 0), pymunk_to_pygame_point(right, surface), self._wheel_size
+            surface, (0, 0, 0), self.sim.meta.pymunk_to_pygame_point(right, surface), self.sim.meta.pymunk_to_pygame_scale(self._wheel_size)
         )
 
         # Draw direction
@@ -362,21 +364,23 @@ class RobotBase(Box):
             surface,
             (0, 255, 0),
             [
-                pymunk_to_pygame_point(center_up, surface),
-                pymunk_to_pygame_point(center_down, surface),
-                pymunk_to_pygame_point(right_down, surface),
-                pymunk_to_pygame_point(right_up, surface),
+                self.sim.meta.pymunk_to_pygame_point(center_up, surface),
+                self.sim.meta.pymunk_to_pygame_point(center_down, surface),
+                self.sim.meta.pymunk_to_pygame_point(right_down, surface),
+                self.sim.meta.pymunk_to_pygame_point(right_up, surface),
             ],
         )
 
+
+
         # Draw light emitter
         if self.light_switch:
-            x, y = pymunk_to_pygame_point(self.body.position, surface=surface)
+            x, y = self.sim.meta.pymunk_to_pygame_point(self.body.position, surface=surface)
             pygame.draw.circle(
                 surface=surface,
                 color=(255, 255, 0),
                 center=(x, y),
-                radius=self._light_range,
+                radius=self.sim.meta.pymunk_to_pygame_scale(self._light_range),
                 width=1,
             )
 
@@ -389,7 +393,7 @@ class RobotBase(Box):
             messages = " | ".join([m.message for m in messages])
             text_surface = font.render(str(messages), True, font_color)
             text_rect = text_surface.get_rect()
-            text_pos = pymunk_to_pygame_point(
+            text_pos = self.sim.meta.pymunk_to_pygame_point(
                 point=(
                     self.body.position.x + self.side_length // 2 + 10,
                     self.body.position.y,
@@ -418,6 +422,10 @@ class RobotBase(Box):
 
         self.body.apply_force_at_local_point((self._force_left, 0), self.top)
         self.body.apply_force_at_local_point((self._force_right, 0), self.bottom)
+
+        forward = pymunk.Vec2d(1, 0).rotated(self.body.angle)
+        velocity_along_forward = self.body.velocity.dot(forward)
+        self.body.velocity = forward.normalized() * velocity_along_forward
 
     def controller_update(self):
         pass

@@ -9,7 +9,7 @@ class Environment:
         self.waypointData: list[IWaypointData] = []
         self.waypoints = None
         self.sim = sim
-        self.homebase = HomeBase(sim.pixels_x // 2, sim.pixels_y // 2)
+        self.homebase = HomeBase(0, 0)
         self.sim.add_game_object(self.homebase)
         self.resources = []
         self.collected_count = 0
@@ -29,6 +29,8 @@ class Environment:
         for _ in range(count):
             x = random.randint(0, self.sim.pixels_x)
             y = random.randint(0, self.sim.pixels_y)
+            x += -self.sim.pixels_x / 2
+            y += -self.sim.pixels_y / 2
             resource = Resource(x, y, radius)
             self.resources.append(resource)
             self.sim.add_game_object(resource)
@@ -47,6 +49,9 @@ class Environment:
             for grid_y in range(y_count):
                 x = leftover_x + grid_x * distance
                 y = leftover_y + grid_y * distance
+
+                x += -self.sim.pixels_x / 2
+                y += -self.sim.pixels_y / 2
 
                 waypoint = Waypoint(x, y, homebase_position=self.homebase.body.position, homebase_threshold=homebase_threshold)
                 waypointData = IWaypointData(position=waypoint.body.position, id=i, neighbors={}, is_homebase=waypoint.is_homebase)
