@@ -345,11 +345,14 @@ class RobotBase(Box):
         # Draw wheels
         left = self.body.local_to_world(self._wheel_pos_left)
         right = self.body.local_to_world(self._wheel_pos_right)
+
+
+
         pygame.draw.circle(
-            surface, (0, 0, 0), self.sim.meta.pymunk_to_pygame_point(left, surface), self._wheel_size
+            surface, (0, 0, 0), self.sim.meta.pymunk_to_pygame_point(left, surface), self.sim.meta.pymunk_to_pygame_scale(self._wheel_size)
         )
         pygame.draw.circle(
-            surface, (0, 0, 0), self.sim.meta.pymunk_to_pygame_point(right, surface), self._wheel_size
+            surface, (0, 0, 0), self.sim.meta.pymunk_to_pygame_point(right, surface), self.sim.meta.pymunk_to_pygame_scale(self._wheel_size)
         )
 
         # Draw direction
@@ -368,6 +371,8 @@ class RobotBase(Box):
             ],
         )
 
+
+
         # Draw light emitter
         if self.light_switch:
             x, y = self.sim.meta.pymunk_to_pygame_point(self.body.position, surface=surface)
@@ -375,7 +380,7 @@ class RobotBase(Box):
                 surface=surface,
                 color=(255, 255, 0),
                 center=(x, y),
-                radius=self._light_range,
+                radius=self.sim.meta.pymunk_to_pygame_scale(self._light_range),
                 width=1,
             )
 
