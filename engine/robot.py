@@ -423,6 +423,10 @@ class RobotBase(Box):
         self.body.apply_force_at_local_point((self._force_left, 0), self.top)
         self.body.apply_force_at_local_point((self._force_right, 0), self.bottom)
 
+        forward = pymunk.Vec2d(1, 0).rotated(self.body.angle)
+        velocity_along_forward = self.body.velocity.dot(forward)
+        self.body.velocity = forward.normalized() * velocity_along_forward
+
     def controller_update(self):
         pass
 

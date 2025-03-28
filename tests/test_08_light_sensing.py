@@ -135,7 +135,7 @@ if __name__ == "__main__":
         ignore_battery=True,
         battery_capacity=100000,
         motor_strength=100000,
-        position=(SIZE_X // 2, SIZE_Y // 2),
+        position=(0, 0),
     )
     sim.add_game_object(manual_robot)
 
@@ -144,7 +144,7 @@ if __name__ == "__main__":
         ignore_battery=True,
         battery_capacity=100000,
         motor_strength=100000,
-        position=(SIZE_X // 2, SIZE_Y // 2),
+        position=(0, SIZE_Y // 4),
     )
     sim.add_game_object(manual_robot)
 

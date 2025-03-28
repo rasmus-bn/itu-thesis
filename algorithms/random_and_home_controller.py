@@ -27,7 +27,10 @@ class RandomHomeController(BaseController):
         # list of waypoint to get back
         self.visited_waypoints: list[IWaypointData] = []
 
-    def update(self):
+    def robot_start(self):
+        pass
+
+    def robot_update(self):
         assert self.sensors and self.controls
 
         if self.state == RobotState.SEARCH:
@@ -127,7 +130,7 @@ class RandomHomeController(BaseController):
 
         if self.target_waypoint.position.get_distance(robot_position) < waypoint_distance // 4:
             if len(self.visited_waypoints) == 0:
-                self.state = RobotState.WAIT
+                self.state = RobotState.SEARCH
                 self.target_waypoint = None
                 return
             self.target_waypoint = get_new_waypoint()
