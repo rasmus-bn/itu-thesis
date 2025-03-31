@@ -26,8 +26,8 @@ class RandomRecruitController(BaseController):
         self.max_speed = 0.0
         self.RECRUITMENT_THRESHOLD = 1 / 5  # speed threshold where the robot will start recruiting
         self.path_qualifier = None
-        self.PID = PID(Kp=7, Ki=0.2, Kd=0.4)
-        self.BASE_SPEED = 1.0
+        self.PID = PID(Kp=3, Ki=0.0, Kd=0.3)
+        self.BASE_SPEED = 0.8
         self.show_pop_ups = False
 
         # variables needed to be initialized
@@ -101,7 +101,7 @@ class RandomRecruitController(BaseController):
         if self.path_qualifier is None:
             self.path_qualifier = randint(0, 100_000)
         msg_prefix = f"retrieve-path:{self.path_qualifier}:"
-        full_path =  [str(waypoint.id) for waypoint in self.visited_waypoints]
+        full_path = [str(waypoint.id) for waypoint in self.visited_waypoints]
         full_path.append(str(self.target_waypoint.id))
         own_path_str = msg_prefix + ",".join(full_path)
         self.controls.set_message(message=own_path_str)

@@ -1,4 +1,5 @@
 import random
+import pymunk
 from engine.objects import Circle, Box
 from engine.types import IWaypointData
 
@@ -112,7 +113,7 @@ class Environment:
 
 
 class Waypoint(Circle):
-    def __init__(self, x, y, radius=5, color=(40, 200, 40), homebase_position=(0, 0), homebase_threshold=50):
+    def __init__(self, x, y, radius=5, color=(40, 40, 40), homebase_position=(0, 0), homebase_threshold=50):
         super().__init__(x=x, y=y, radius=radius, color=color)
         self.shape.sensor = True
         self.is_homebase = False
@@ -128,8 +129,14 @@ class Resource(Circle):
         super().__init__(x=x, y=y, radius=radius, color=color)
         self.shape.collision_type = 2  # Set collision type for resource
 
+        self.shape.filter = pymunk.ShapeFilter(
+            categories=0b0100,  # This object is a resource
+            mask=0b0001 | 0b0010 | 0b0100,  # Detects robots, obstacles, and goals
+            group=0
+        )
+
 
 class HomeBase(Box):
-    def __init__(self, x, y, width=200, length=200, color=(30, 30, 30)):
+    def __init__(self, x, y, width=200, length=200, color=(40, 40, 40)):
         super().__init__(x=x, y=y, width=width, length=length, color=color, trigger=True)
         self.shape.collision_type = 1  # Set collision type for homebase

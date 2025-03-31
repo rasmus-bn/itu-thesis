@@ -122,10 +122,11 @@ class RobotBase(Box):
         RobotBase._robot_counter += 1
 
         robot_mask = 0b0001 if robot_collision else 0b0000
+        resource_mask = 0b0100 if robot_collision else 0b0000
 
         self.shape.filter = pymunk.ShapeFilter(
             categories=0b0001,  # This object is a robot
-            mask=robot_mask | 0b0010 | 0b0100,  # Detects robots, obstacles, and goals
+            mask=robot_mask | 0b0010 | resource_mask,  # Detects robots, obstacles, and goals
             group=self.robot_group,  # Ignores itself
         )
 
@@ -345,9 +346,6 @@ class RobotBase(Box):
         # Draw wheels
         left = self.body.local_to_world(self._wheel_pos_left)
         right = self.body.local_to_world(self._wheel_pos_right)
-
-
-
         pygame.draw.circle(
             surface, (0, 0, 0), self.sim.meta.pymunk_to_pygame_point(left, surface), self.sim.meta.pymunk_to_pygame_scale(self._wheel_size)
         )

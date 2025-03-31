@@ -28,7 +28,7 @@ class WorldMeta:
         self.cm_frames_to_km_h = self.fps * (self.hour_to_seconds / self.km_to_cm)
 
     def pymunk_to_pygame_point(self, point: tuple, surface):
-        return (int(point[0]) - self.camera_offset[0])*self.camera_scale + self.base_offset[0], (int(point[1] - self.camera_offset[1])*-1*self.camera_scale + self.base_offset[1])
+        return (point[0] - self.camera_offset[0])*self.camera_scale + self.base_offset[0], (point[1] - self.camera_offset[1])*-1*self.camera_scale + self.base_offset[1]
 
     def pymunk_to_pygame_scale(self, value: float):
         return int(value * self.camera_scale)

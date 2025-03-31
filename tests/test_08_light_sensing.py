@@ -49,10 +49,10 @@ class ManualRobotBase(RobotBase):
         keys = pygame.key.get_pressed()  # Get key states
         controlSchemes = [
             {
-                "up": keys[pygame.K_UP],
-                "down": keys[pygame.K_DOWN],
-                "left": keys[pygame.K_LEFT],
-                "right": keys[pygame.K_RIGHT],
+                "up": keys[pygame.K_i],
+                "down": keys[pygame.K_k],
+                "left": keys[pygame.K_j],
+                "right": keys[pygame.K_l],
                 "attach": keys[pygame.K_SPACE],
                 "color": (255, 0, 0),  # Red
                 "comm_range": 50,

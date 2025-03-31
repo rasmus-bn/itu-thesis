@@ -16,7 +16,8 @@ class RobotState(Enum):
 class RandomHomeController(BaseController):
     def __init__(self):
         super().__init__()
-        self.pid = PID(Kp=7, Ki=0.2, Kd=0.4)
+        self.pid = PID(Kp=3, Ki=0.0, Kd=0.3)
+        self.base_speed = 0.5
 
         # initial state
         self.state = RobotState.SEARCH
@@ -108,11 +109,10 @@ class RandomHomeController(BaseController):
         control = self.pid.compute(angle_to_target)
 
         # Convert control signal into motor values
-        base_speed = 1.0  # Max forward speed
         turn = max(-1, min(1, control))  # Clamp turn value to [-1, 1]
 
-        left_motor = base_speed - turn
-        right_motor = base_speed + turn
+        left_motor = self.base_speed - turn
+        right_motor = self.base_speed + turn
 
         # Apply motor values
         self.controls.set_motor_values(left_motor, right_motor)
@@ -153,11 +153,10 @@ class RandomHomeController(BaseController):
         control = self.pid.compute(angle_to_target)
 
         # Convert control signal into motor values
-        base_speed = 1.0  # Max forward speed
         turn = max(-1, min(1, control))  # Clamp turn value to [-1, 1]
 
-        left_motor = base_speed - turn
-        right_motor = base_speed + turn
+        left_motor = self.base_speed - turn
+        right_motor = self.base_speed + turn
 
         # Apply motor values
         self.controls.set_motor_values(left_motor, right_motor)

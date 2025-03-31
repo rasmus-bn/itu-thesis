@@ -32,7 +32,7 @@ class SimulationBase:
         self.delta_time_alert = self.delta_time * 1.2
         self.space = pymunk.Space()
         # How much energy is lost over time
-        self.space.damping = 0.01
+        self.space.damping = 0.25
 
         # Visualization
         self._display = None

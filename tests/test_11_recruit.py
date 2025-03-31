@@ -1,38 +1,33 @@
 from random import uniform
+from algorithms.random_and_home_controller import RandomHomeController
 from algorithms.random_and_recruit_controller import RandomRecruitController
 from engine.debug_colors import Colors
 from engine.environment import Environment
 from engine.robot import RobotBase
 from engine.simulation import SimulationBase
 
-# Settings
-SIZE_X = 1400
-SIZE_Y = 950
+# SETTINGS
+SIZE_X = 1280
+SIZE_Y = 720
 MAX_SIZE = 20000
-ROBOT_COUNT = 15
+ROBOT_COUNT = 10
 RESOURCES_COUNT = 5
 RESOURCES_SIZE = 150
+battery_capacity = MAX_SIZE // 4
+motor_strength = MAX_SIZE // 2
+CENTER = (0, 0)
 
-# test environment
-sim = SimulationBase(
-    pixels_x=SIZE_X, pixels_y=SIZE_Y, enable_realtime=True, enable_display=True
-)
+# ENVIRONMENT
+sim = SimulationBase(pixels_x=SIZE_X, pixels_y=SIZE_Y, enable_realtime=True, enable_display=True)
 env = Environment(sim)
-env.generate_resources(count=RESOURCES_COUNT, radius=RESOURCES_SIZE)
-env.generate_waypoints(distance=80, x_count=10, y_count=9, homebase_threshold=50)
 
-center = (0, 0)
+env.generate_waypoints(distance=80, x_count=13, y_count=7, homebase_threshold=50)
+env.generate_resources(count=RESOURCES_COUNT, radius=RESOURCES_SIZE)
 
 
 for i in range(ROBOT_COUNT):
-    # Generate random initial position that is a little offest from the center
-    random_initial_position = (
-        center[0] + uniform(-1, 1) * 50,
-        center[1] + uniform(-1, 1) * 50,
-    )
+    random_initial_position = (uniform(-1, 1) * 50, uniform(-1, 1) * 50)
 
-    battery_capacity = MAX_SIZE // 4
-    motor_strength = MAX_SIZE // 2
     controller = RandomRecruitController()
     robot = RobotBase(
         battery_capacity,
@@ -41,7 +36,7 @@ for i in range(ROBOT_COUNT):
         angle=0,
         controller=controller,
         ignore_battery=True,
-        robot_collision=True,
+        robot_collision=False,
         debug_color=Colors.get_random_color(),
     )
     robot._comms_range = 300

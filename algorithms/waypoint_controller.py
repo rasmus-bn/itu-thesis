@@ -12,12 +12,16 @@ class RobotState(Enum):
 class WaypointController(BaseController):
     def __init__(self, counter_steering=0.0):
         super().__init__()
+        self.base_speed = 0.5
         self.counter_steering = counter_steering
         self.state = RobotState.FOLLOW_TRACK
         self.waypoint_index = 0
-        self.pid = PID(Kp=7, Ki=0.2, Kd=0.4)
+        self.pid = PID(Kp=3, Ki=0.0, Kd=0.3)
 
-    def update(self):
+    def robot_start(self):
+        pass
+
+    def robot_update(self):
         if not self.sensors or not self.controls:
             raise RuntimeError("sensors or controls not available")
 
@@ -77,12 +81,11 @@ class WaypointController(BaseController):
         control = self.pid.compute(adjusted_angle_difference)
 
         # Convert control signal into motor values
-        base_speed = 1.0  # Max forward speed
         # base_speed *= min((distance_to_target / waypoint_distance), 1.0)  # slow down before each waypoint
         turn = max(-1, min(1, control))  # Clamp turn value to [-1, 1]
 
-        left_motor = base_speed - turn
-        right_motor = base_speed + turn
+        left_motor = self.base_speed - turn
+        right_motor = self.base_speed + turn
 
         # Apply motor values
         self.controls.set_motor_values(left_motor, right_motor)
