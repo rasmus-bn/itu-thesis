@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from time import time
 import pygame
 import pymunk
+import threading
 
 from engine.tether import Tether
 from engine.environment import Environment
@@ -19,9 +20,11 @@ class SimulationBase:
     background_color: tuple = (20, 20, 20)
     frame_count: int = 0
     start_time: float = None
+    last_time: float = None
     end_time: float = None
     run_time: float = None
     environment: Environment = None
+    run_second_thread = True
 
     def __post_init__(self):
         self._game_objects: IGameObject = []
@@ -51,11 +54,13 @@ class SimulationBase:
 
         # Visualization
         if self.enable_display:
+            self.last_time = pygame.time.get_ticks()
             pygame.init()
             self._display = pygame.display.set_mode((self.pixels_x, self.pixels_y))
             self._clock = pygame.time.Clock()
 
     def _quit(self):
+        self.run_second_thread = False
         self.end_time = time()
         run_time = self.end_time - self.start_time
         expected_time = self.frame_count / self.fps
@@ -74,26 +79,32 @@ class SimulationBase:
 
     def _run(self):
         self._start()
-        last_time = pygame.time.get_ticks()
+
+        def work():
+            while self.run_second_thread:
+                # Counters
+                self.frame_count += 1
+
+                # Physics
+                self.space.step(self.delta_time)
+
+                # Update
+                self._preupdate()
+                self._update()
+                self._postupdate()
+
+        second_thread = threading.Thread(target=work)
+        second_thread.start()
+
         while True:
-            actual_delta_time = (pygame.time.get_ticks() - last_time) / 1000
-            last_time = pygame.time.get_ticks()
-            if actual_delta_time > self.delta_time_alert:
-                print(
-                    f"Warning: Frame took {actual_delta_time} seconds, expected {self.delta_time}"
-                )
-            self.frame_count += 1
-            # print(f"Frame {self.frame_count}")
-
-            # Physics
-            self.space.step(self.delta_time)
-
-            # Update
-            self._preupdate()
-            self._update()
-
             # Visualization
             if self.enable_display:
+                # Measure Time
+                actual_delta_time = (pygame.time.get_ticks() - self.last_time) / 1000
+                self.last_time = pygame.time.get_ticks()
+                if actual_delta_time > self.delta_time_alert:
+                    print(f"Warning: Frame took {actual_delta_time} seconds, expected {self.delta_time}")
+
                 # Move camera
                 self._update_camera()
 
@@ -110,7 +121,7 @@ class SimulationBase:
                 if self.enable_realtime:
                     self._clock.tick(self.fps)
 
-            self._postupdate()
+
 
     def _preupdate(self):
         for obj in self._game_objects:

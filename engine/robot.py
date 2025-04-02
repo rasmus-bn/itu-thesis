@@ -268,11 +268,12 @@ class RobotBase(Box):
 
     def print(self, message: any, pop_up: bool = False):
         # Print in terminal with color
-        if self.debug_color:
-            self.debug_color.print(message)
-        # Print normally
-        else:
-            print(message)
+        if False:
+            if self.debug_color:
+                self.debug_color.print(message)
+            # Print normally
+            else:
+                print(message)
         # Display in-game pop up text
         if pop_up:
             latest = self.debug_messages[-1] if self.debug_messages else None
