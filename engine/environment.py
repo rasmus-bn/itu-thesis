@@ -1,5 +1,6 @@
 import random
 import pymunk
+import math
 from engine.objects import Circle, Box
 from engine.types import IWaypointData
 
@@ -25,13 +26,13 @@ class Environment:
     def get_homebase(self):
         return self.homebase
 
-    def generate_resources(self, count, radius=30):
+    def generate_resources(self, count, min_dist=100, max_dist=1000, radius=30):
         self.resources = []
         for _ in range(count):
-            x = random.randint(0, self.sim.pixels_x)
-            y = random.randint(0, self.sim.pixels_y)
-            x += -self.sim.pixels_x / 2
-            y += -self.sim.pixels_y / 2
+            distance = random.randint(min_dist, max_dist)
+            angle = random.uniform(0, 2 * math.pi)
+            x = distance * math.cos(angle)
+            y = distance * math.sin(angle)
             resource = Resource(x, y, radius)
             self.resources.append(resource)
             self.sim.add_game_object(resource)
@@ -43,17 +44,10 @@ class Environment:
         i = 0
         waypoint_map = {}  # Dictionary to store waypoints by their grid position
 
-        leftover_x = (self.sim.pixels_x - (x_count * distance)) // 2 + distance // 2 if self.sim.pixels_x // x_count > distance else 0
-        leftover_y = (self.sim.pixels_y - (y_count * distance)) // 2 + distance // 2 if self.sim.pixels_y // y_count > distance else 0
-
         for grid_x in range(x_count):
             for grid_y in range(y_count):
-                x = leftover_x + grid_x * distance
-                y = leftover_y + grid_y * distance
-
-                x += -self.sim.pixels_x / 2
-                y += -self.sim.pixels_y / 2
-
+                x = -((distance * (x_count-1)) / 2) + grid_x * distance
+                y = -((distance * (y_count-1)) / 2) + grid_y * distance
                 waypoint = Waypoint(x, y, homebase_position=self.homebase.body.position, homebase_threshold=homebase_threshold)
                 waypointData = IWaypointData(position=waypoint.body.position, id=i, neighbors={}, is_homebase=waypoint.is_homebase)
                 self.waypointData.append(waypointData)
@@ -113,7 +107,7 @@ class Environment:
 
 
 class Waypoint(Circle):
-    def __init__(self, x, y, radius=5, color=(40, 40, 40), homebase_position=(0, 0), homebase_threshold=50):
+    def __init__(self, x, y, radius=5, color=(40, 255, 40), homebase_position=(0, 0), homebase_threshold=50):
         super().__init__(x=x, y=y, radius=radius, color=color)
         self.shape.sensor = True
         self.is_homebase = False

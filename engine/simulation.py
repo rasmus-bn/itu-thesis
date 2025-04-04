@@ -24,7 +24,8 @@ class SimulationBase:
     end_time: float = None
     run_time: float = None
     environment: Environment = None
-    run_second_thread = True
+    physics_thread = True
+    physics_sync_event = threading.Event()
 
     def __post_init__(self):
         self._game_objects: IGameObject = []
@@ -60,7 +61,10 @@ class SimulationBase:
             self._clock = pygame.time.Clock()
 
     def _quit(self):
-        self.run_second_thread = False
+        self.physics_thread = False
+        if self.enable_realtime:
+            self.physics_sync_event.set()
+
         self.end_time = time()
         run_time = self.end_time - self.start_time
         expected_time = self.frame_count / self.fps
@@ -80,8 +84,13 @@ class SimulationBase:
     def _run(self):
         self._start()
 
-        def work():
-            while self.run_second_thread:
+        def run_physics():
+            while self.physics_thread:
+                # Realtime synchronization
+                if self.enable_realtime:
+                    self.physics_sync_event.wait()  # Wait for render loop signal
+                    self.physics_sync_event.clear()  # Reset for next frame
+
                 # Counters
                 self.frame_count += 1
 
@@ -93,12 +102,12 @@ class SimulationBase:
                 self._update()
                 self._postupdate()
 
-        second_thread = threading.Thread(target=work)
-        second_thread.start()
+        physics_thread = threading.Thread(target=run_physics)
+        physics_thread.start()
 
-        while True:
-            # Visualization
-            if self.enable_display:
+        # Visualization (Main Thread)
+        if self.enable_display:
+            while True:
                 # Measure Time
                 actual_delta_time = (pygame.time.get_ticks() - self.last_time) / 1000
                 self.last_time = pygame.time.get_ticks()
@@ -119,7 +128,10 @@ class SimulationBase:
                 pygame.display.update()
                 # Sleep to maintain FPS
                 if self.enable_realtime:
+                    self.physics_sync_event.set()
                     self._clock.tick(self.fps)
+
+        physics_thread.join()
 
 
 

@@ -4,7 +4,7 @@ class WorldMeta:
         screen_width: int = 640,
         screen_height: int = 480,
         background_color: tuple[int, int, int] = (20, 20, 20),
-        camera_scale: float = 1,
+        camera_scale: float = 0.25,
         fps: int = 60,
     ):
         # Visualization
