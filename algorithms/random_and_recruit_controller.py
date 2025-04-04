@@ -234,4 +234,7 @@ class RandomRecruitController(BaseController):
         turn = max(-1, min(1, control))  # Clamp turn value to [-1, 1]
         left_motor = self.BASE_SPEED - turn
         right_motor = self.BASE_SPEED + turn
+        if self.state == RobotState.RETRIEVE:
+            self.debug.print(f"direction_to_target: {direction_to_target}, robot_angle: {robot_angle}, angle_to_target: {angle_to_target}, motor values: ({left_motor},{right_motor})", False)
+            self.debug.print(f"prev_error: {self.PID.prev_error}, integral: {self.PID.integral}", False)
         self.controls.set_motor_values(left_motor, right_motor)

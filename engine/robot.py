@@ -15,17 +15,18 @@ from time import time
 
 from engine.types import DebugMessage, ILidarData, ILightData
 
-# Used for calculating the size of the robot
-BATTERY_SCALER = 1
-MOTOR_SCALER = 1
-SIZE_SCALER = 1
-# Used to calculate the weight of the robot
-BATTERY_DENSITY = 0.1
-MOTOR_DENSITY = 0.1
-WEIGHT_SCALER = 1
 # Used to calculate the force of the motors and their power consumption
 MOTOR_FORCE_SCALER = 100
 MOTOR_POWER_SCALER = 0.001
+
+# Ratios decided by us
+BATTERY_DENSITY = 2.2  # g -> cm³
+MOTOR_DENSITY = 5  # g -> cm³
+MOTOR_WEIGHT_TO_TORQUE = 66  # g -> Nm (Newton-meter)
+BATTERY_WEIGHT_TO_CAPACITY = 0.1  # g -> Wh (Watt-hour)
+MOTOR_TORQUE_TO_CONSUMPTION = 0.2  # Nm -> W (Watt)
+# Actual ratio
+NEWTON_TO_PYMUNK_FORCE = 100_000 # N = kg·m/s² -> g·cm/s²
 
 
 class RobotBase(Box):
@@ -33,11 +34,12 @@ class RobotBase(Box):
 
     def __init__(
         self,
-        battery_volume: float,
-        motor_volume: float,
+        battery_mass: float,
+        motor_mass: float,
         position: tuple = None,
         angle: float = 0,
         color: tuple = None,
+
         num_ir_sensors: int = 8,
         sensor_range: float = 50.0,
         controller: any = None,
@@ -54,18 +56,31 @@ class RobotBase(Box):
         self.light_detectors: list[ILightData] = []
 
         self.ignore_battery = ignore_battery
-        self.battery_capacity = battery_volume  # TODO: find proper unit and convertion
-        self.motor_strength = motor_volume  # TODO: find proper unit and convertion
 
-        self.battery_volume = battery_volume
-        self.motor_volume = motor_volume
+        ######### PHYSICS-ISH - START #########
+        # Mass in grams
+        self.battery_mass = battery_mass
+        self.motor_mass = motor_mass
+        # Battery capacity in Wh
+        self.battery_capacity = battery_mass * BATTERY_WEIGHT_TO_CAPACITY
+        self.battery_remaining = self.battery_capacity
+        # Volumes in cm³
+        self.battery_volume = battery_mass * BATTERY_DENSITY
+        self.motor_volume = motor_mass * MOTOR_DENSITY
+        self.total_volume = self.battery_volume + self.motor_volume
+        # Robot dimensions in cm
+        self.side_length = self.total_volume ** (1 / 3)
+        self.wheel_radius = (self.side_length / 3) / 2
+        # Torque in Nm
+        self.max_torque__newton_meters = motor_mass * MOTOR_WEIGHT_TO_TORQUE / 2 # Two motors
+        self.max_force__newton = self.max_torque__newton_meters / (self.wheel_radius / 100)
+        self.max_force__pymunk = self.max_force__newton * NEWTON_TO_PYMUNK_FORCE
+        # Power consumption in Wh
+        ######### PHYSICS-ISH - END #########
 
         # Debugging
         self.debug_color: IColor = debug_color
         self.debug_messages: list[DebugMessage] = []
-
-        # Battery remaining in the robot
-        self.battery_remaining = self.battery_capacity  # TODO: Verify proper unit
 
         self.up_color = color or (255, 0, 0)
 
@@ -78,10 +93,6 @@ class RobotBase(Box):
             max(min(int(self.up_color[1] * die_color_scaler), 255), 0),
             max(min(int(self.up_color[2] * die_color_scaler), 255), 0),
         )
-
-        self.total_volume = self.battery_volume + self.motor_volume
-        # Cube root of the volume (for 3D cube)
-        self.side_length = self.total_volume ** (1 / 3)
 
         self.mass = self._calc_robot_mass()
 

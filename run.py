@@ -37,7 +37,7 @@ class RotatingRobot(RobotBase):
 
 
 robot = RotatingRobot(
-    battery_volume=1000, motor_volume=10, position=(200, 400), angle=0
+    battery_mass=1000, motor_mass=10, position=(200, 400), angle=0
 )
 sim.add_game_object(robot)
 

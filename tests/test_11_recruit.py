@@ -15,7 +15,7 @@ RESOURCES_SIZE = 150
 
 # test environment
 sim = SimulationBase(
-    pixels_x=SIZE_X, pixels_y=SIZE_Y, enable_realtime=True, enable_display=True
+    pixels_x=SIZE_X, pixels_y=SIZE_Y, enable_realtime=False, enable_display=True
 )
 env = Environment(sim)
 env.generate_resources(count=RESOURCES_COUNT, radius=RESOURCES_SIZE)
@@ -41,7 +41,7 @@ for i in range(ROBOT_COUNT):
         angle=0,
         controller=controller,
         ignore_battery=True,
-        robot_collision=True,
+        robot_collision=False,
         debug_color=Colors.get_random_color(),
     )
     robot._comms_range = 300

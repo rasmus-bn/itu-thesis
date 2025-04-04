@@ -36,6 +36,19 @@ class WorldMeta:
     def convert_speed(self, cm_per_frame: float) -> float:
         """Calculate the speed in km/h from cm/frame"""
         return abs(cm_per_frame) * self.cm_frames_to_km_h
+    
+    
+    def convert_force_newton_to_pymonk(self, newton: float) -> float:
+        """Convert force from newton to pymunk units:
+        1 Newton = 100,000 g·cm/s²
+        """
+        return newton * self.newton_to_pymunk_force
+
+    def convert_force_pymonk_to_newton(self, pymonk: float) -> float:
+        """Convert force from pymunk units to newton:
+        1 g·cm/s² = 0.00001 Newton
+        """
+        return pymonk / self.newton_to_pymunk_force
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ class PID:
 
     def compute(self, error):
         current_time = time.time()
-        dt = max(current_time - self.last_time, 1e-6)  # Prevent division by zero
+        dt = 1/60
         self.last_time = current_time
 
         self.integral += error * dt  # Accumulate integral
