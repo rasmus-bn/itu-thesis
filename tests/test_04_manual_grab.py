@@ -38,6 +38,9 @@ class ManualRobotBase(RobotBase):
                 "attach": keys[pygame.K_e]
             },
         ]
+        print("Wheel velocity:")
+        print(self.body.velocity_at_local_point(self._wheel_pos_left))
+        print(self.body.angle)
 
         # Movement Controls (values accumulate)
         if controlSchemes[self.num]["up"]:  # Move Forward

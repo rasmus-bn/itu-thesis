@@ -24,8 +24,11 @@ class WorldMeta:
 
         # Derived units
         self.km_to_cm = 100_000
+        self.m_to_cm = 100
         self.hour_to_seconds = 3_600
+        self.hour_to_frames = self.fps * self.hour_to_seconds
         self.cm_frames_to_km_h = self.fps * (self.hour_to_seconds / self.km_to_cm)
+        self.newton_to_g_cm_2 = 100_000
 
     def pymunk_to_pygame_point(self, point: tuple, surface):
         return (point[0] - self.camera_offset[0])*self.camera_scale + self.base_offset[0], (point[1] - self.camera_offset[1])*-1*self.camera_scale + self.base_offset[1]
@@ -36,6 +39,18 @@ class WorldMeta:
     def convert_speed(self, cm_per_frame: float) -> float:
         """Calculate the speed in km/h from cm/frame"""
         return abs(cm_per_frame) * self.cm_frames_to_km_h
+
+    def convert_newton_to_pymunk(self, newton: float) -> float:
+        """Convert Newton to Pymunk force units"""
+        return newton * self.newton_to_g_cm_2
+
+    def convert_m_to_pymonk(self, m: float) -> float:
+        """Convert meters to Pymunk units"""
+        return m * self.m_to_cm
+
+    def convert_pymunk_to_m(self, pymunk: float) -> float:
+        """Convert Pymunk units to meters"""
+        return pymunk / self.m_to_cm
 
 
 if __name__ == "__main__":
