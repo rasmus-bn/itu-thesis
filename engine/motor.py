@@ -1,5 +1,8 @@
+from typing import override
+import pygame
 from pymunk import Body, Vec2d
 from engine.types import IBattery, IMotor
+from sim_math.units import AngularSpeed, Distance, Force, Torque
 
 
 def non_zero(value: float) -> float:
@@ -17,54 +20,94 @@ class AcMotor(IMotor):
         meta,
         battery: IBattery,
         body: Body,
-        wheel_position__cm: tuple[float, float],
-        wheel_radius__m: float,
+        max_torque: Torque,
+        wheel_position: tuple[float, float],
+        wheel_radius: Distance,
+        unrestricted_force: bool = False,
+        draw_debug: bool = False,
     ):
-        super().__init__(meta, battery, body, wheel_position__cm, wheel_radius__m)
-        self.wheel_speed__rad_s = 0.0
-        self.back_emf__v = 0.0
-        self.force__n = 0.0
+        super().__init__(
+            meta=meta,
+            battery=battery,
+            body=body,
+            wheel_position=wheel_position,
+            wheel_radius=wheel_radius,
+        )
+        self.max_force = max_torque.to_force_at(radius=wheel_radius)
+        self._wheel_speed = AngularSpeed.in_base_unit(0.0)
+        self._back_emf__v = 0.0
+        self._force = Force.in_base_unit(0.0)
+        self._unrestricted_force = unrestricted_force
+        self._draw_debug = draw_debug
 
-    def request_force(self, force__n: float) -> None:
+        # Purely for visualization
+        self._wheel_size = self.meta.pymunk_to_pygame_scale(4)
+        self._wheel_pos_left = (
+            self.wheel_position[0] * 0.9,
+            self.wheel_position[1] * 0.9,
+        )
+
+    @override
+    def request_force(self, force: Force) -> None:
         """Requests a force (N) to be applied to the wheel.
         The force is applied at the wheel position during the postupdate phase.
         """
-        self.force__n = force__n
+        if not self._unrestricted_force:
+            force = max(-self.max_force, min(self.max_force, force))
+        self._force = force
 
+    @override
+    def request_force_scaled(self, force_scaler: float) -> None:
+        """Requests a to be applied to the wheel from a value of -1 to 1.
+        The force is applied at the wheel position during the postupdate phase.
+        """
+        self.request_force(force=self.max_force * force_scaler)
+
+    @override
     def preupdate(self):
         self._calc_wheel_speed()
         self._calc_back_emf()
 
-    def postupdate(self):
+    @override
+    def update(self):
         self._apply_force()
+
+    @override
+    def draw(self, surface):
+        # Draw wheels as dots
+        global_pos = self.body.local_to_world(self._wheel_pos_left)
+        pygame.draw.circle(
+            surface=surface,
+            color=(0, 0, 0),
+            center=self.meta.pymunk_to_pygame_point(global_pos, surface),
+            radius=self._wheel_size,
+        )
 
     def _apply_force(self):
         """Applies the force to the wheel based on the requested force.
         The force is applied at the wheel position.
         """
-        torque__n_m = self._get_requested_torque()
-        amps = self._calc_amps_from_desired_torque(t=torque__n_m)
+        requested_torque = self._force.to_torque_at(radius=self.wheel_radius)
+        amps = self._calc_amps_from_desired_torque(t=requested_torque)
         volts = self._calc_volts_to_achieve_amps(amps=amps)
         volts = self.battery.get_volts(volts=volts)
         got_power = self.battery.draw_power(volts=volts, amps=amps)
 
         if got_power:
-            force = self.meta.convert_newton_to_pymunk(newton=self.force__n)
-            self.body.apply_force_at_local_point(
-                force=(force, 0), point=self.wheel_position__cm
-            )
+            # Forward force
+            force = (self._force.base_unit, 0)
+            self.body.apply_force_at_local_point(force=force, point=self.wheel_position)
 
     def _calc_wheel_speed(self):
         """Calculates the wheel speed in rad/s based on the distance traveled by the wheel."""
-        dist_vector: Vec2d = self.body.velocity_at_local_point(self.wheel_position__cm)
-        angle__rad = self.body.angle
+        dist_vector: Vec2d = self.body.velocity_at_local_point(self.wheel_position)
+        direction_vector = Vec2d(1, 0).rotated(self.body.angle)
         # The distance traveled in the direction of the wheel
-        dist_in_direction = dist_vector.dot(Vec2d(1, 0).rotated(angle__rad))
-        dist_in_direction__m = self.meta.convert_pymunk_to_m(dist_in_direction)
+        dist_in_direction = dist_vector.dot(direction_vector)
         # Calculates the wheel speed in rad/timestep
-        wheel_speed__rad_frame = non_zero(dist_in_direction__m) / self.wheel_radius__m
-        # Convert to rad/s
-        self.wheel_speed__rad_s = wheel_speed__rad_frame * self.meta.fps
+        self._wheel_speed = AngularSpeed.in_base_unit(
+            non_zero(dist_in_direction) / self.wheel_radius.base_unit
+        )
 
     def _calc_back_emf(self):
         """Calculates the back EMF based on the wheel speed.
@@ -75,19 +118,9 @@ class AcMotor(IMotor):
             kE = back EMF constant (V/(rad/s))
             ω = wheel speed (rad/s)
         """
-        self.back_emf__v = self.KE * self.wheel_speed__rad_s
+        self._back_emf__v = self.KE * self._wheel_speed.rad_s
 
-    def _get_requested_torque(self) -> float:
-        """Gets the requested torque of the motor.
-            T = F * r
-        where:
-            T = torque (Nm)
-            F = force (N)
-            r = wheel radius (m)
-        """
-        return self.force__n * self.wheel_radius__m
-
-    def _calc_amps_from_desired_torque(self, t: float) -> float:
+    def _calc_amps_from_desired_torque(self, t: Torque) -> float:
         """Calculates the required amps based on the desired torque.
         The amps are calculated using the torque constant (kT).
             T = kT * I   == solve I ==>   I = T / kT
@@ -96,7 +129,7 @@ class AcMotor(IMotor):
             T = torque (Nm)
             kT = torque constant (Nm/A)
         """
-        return non_zero(t) / self.KT
+        return non_zero(t.nm) / self.KT
 
     def _calc_volts_to_achieve_amps(self, amps: float) -> float:
         """Calculates the required volts to achieve the desired amps.
@@ -108,4 +141,4 @@ class AcMotor(IMotor):
             R = resistance (Ohm)
             E = back EMF (V)
         """
-        return amps * self.RESISTANCE + self.back_emf__v
+        return amps * self.RESISTANCE + self._back_emf__v

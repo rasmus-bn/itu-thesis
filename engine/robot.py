@@ -3,38 +3,39 @@ import pygame
 from algorithms.control_api import RobotControlAPI
 from algorithms.debug_api import RobotDebugAPI
 from algorithms.sensor_api import RobotSensorAPI
+from engine.battery import Battery
 from engine.debug_colors import IColor
+from engine.motor import AcMotor
+from engine.simulation import SimulationBase
 from engine.tether import Tether
 from engine.gpt_generated.closest_point_on_circle import closest_point_on_circle
 from engine.environment import Resource
-from engine.objects import Box
+from engine.objects import Circle
 from sim_math.angles import calc_relative_angle
 import numpy as np
 import pymunk
+from pymunk import Vec2d
 from time import time
 
-from engine.types import DebugMessage, ILidarData, ILightData
-
-# Used for calculating the size of the robot
-BATTERY_SCALER = 1
-MOTOR_SCALER = 1
-SIZE_SCALER = 1
-# Used to calculate the weight of the robot
-BATTERY_DENSITY = 0.1
-MOTOR_DENSITY = 0.1
-WEIGHT_SCALER = 1
-# Used to calculate the force of the motors and their power consumption
-MOTOR_FORCE_SCALER = 100
-MOTOR_POWER_SCALER = 0.001
+from engine.types import (
+    DebugMessage,
+    IBattery,
+    IComponent,
+    ILidarData,
+    ILightData,
+    IMotor,
+    IRobotSpec,
+)
+from sim_math.units import Speed
 
 
-class RobotBase(Box):
+class RobotBase(Circle):
     _robot_counter = 1  # Keeps track of unique robot IDs
 
     def __init__(
         self,
-        battery_volume: float,
-        motor_volume: float,
+        robot_spec: IRobotSpec,
+        sim: SimulationBase,
         position: tuple = None,
         angle: float = 0,
         color: tuple = None,
@@ -45,7 +46,37 @@ class RobotBase(Box):
         robot_collision: bool = True,
         debug_color: IColor = None,
     ):
+        # RobotSpec
+        self.spec = robot_spec
         self._comms_range = 50
+
+        # DC battery
+        self.battery: IBattery = Battery(
+            meta=sim.meta,
+            capacity__wh=self.spec.battery_capacity__wh,
+            infinite_power=ignore_battery,
+        )
+        # Left AC Motor
+        self.motor_l: IMotor = AcMotor(
+            meta=sim.meta,
+            battery=self.battery,
+            body=self.body,
+            max_torque=self.spec.max_motor_torque,
+            wheel_position=self.top,
+            wheel_radius=self.spec.wheel_radius,
+        )
+        # Right AC Motor
+        self.motor_r: IMotor = AcMotor(
+            meta=sim.meta,
+            battery=self.battery,
+            body=self.body,
+            max_torque=self.spec.max_motor_torque,
+            wheel_position=self.bottom,
+            wheel_radius=self.spec.wheel_radius,
+        )
+        # List of all IComponents
+        self.components: list[IComponent] = [self.battery, self.motor_l, self.motor_r]
+
         self.message: None | str = None
         self.received_messages: list[str] = []
 
@@ -53,19 +84,9 @@ class RobotBase(Box):
         self.light_switch = False
         self.light_detectors: list[ILightData] = []
 
-        self.ignore_battery = ignore_battery
-        self.battery_capacity = battery_volume  # TODO: find proper unit and convertion
-        self.motor_strength = motor_volume  # TODO: find proper unit and convertion
-
-        self.battery_volume = battery_volume
-        self.motor_volume = motor_volume
-
         # Debugging
         self.debug_color: IColor = debug_color
         self.debug_messages: list[DebugMessage] = []
-
-        # Battery remaining in the robot
-        self.battery_remaining = self.battery_capacity  # TODO: Verify proper unit
 
         self.up_color = color or (255, 0, 0)
 
@@ -79,38 +100,34 @@ class RobotBase(Box):
             max(min(int(self.up_color[2] * die_color_scaler), 255), 0),
         )
 
-        self.total_volume = self.battery_volume + self.motor_volume
-        # Cube root of the volume (for 3D cube)
-        self.side_length = self.total_volume ** (1 / 3)
-
-        self.mass = self._calc_robot_mass()
-
         self.tether: Tether | None = None
 
-        # Call the box constructor
+        position = (0, 0) if position is None else position
+
+        # Call the circle constructor
         super().__init__(
-            *(position or (0, 0)),
+            x=position[0],
+            y=position[1],
             angle=angle,
-            width=self.side_length,
-            length=self.side_length,
+            radius=self.spec.robot_diameter.base_unit / 2,
             color=self.up_color,
-            density=self._calc_robot_density(),
-            virtual_height=self.side_length,
+            density=self.spec.robot_density_2d.base_unit,
+            sim=sim,
         )
 
         # Speedometer
-        self.speedometer = 0
-        self.old_pos = self.body.position
-
-        self._left_motor = 0
-        self._right_motor = 0
-        self._force_left = 0
-        self._force_right = 0
+        self.speedometer = Speed.in_base_unit(0)
 
         # Purely for visualization
         self._wheel_size = 4
-        self._wheel_pos_left = (self.top[0], self.top[1] - self._wheel_size)
-        self._wheel_pos_right = (self.bottom[0], self.bottom[1] + self._wheel_size)
+        self._wheel_pos_left = (
+            self.motor_l.wheel_position[0],
+            self.motor_l.wheel_position[1] - self._wheel_size,
+        )
+        self._wheel_pos_right = (
+            self.motor_r.wheel_position[0],
+            self.motor_r.wheel_position[1] + self._wheel_size,
+        )
 
         # Sensor setup
         self.num_ir_sensors = num_ir_sensors
@@ -126,7 +143,9 @@ class RobotBase(Box):
 
         self.shape.filter = pymunk.ShapeFilter(
             categories=0b0001,  # This object is a robot
-            mask=robot_mask | 0b0010 | resource_mask,  # Detects robots, obstacles, and goals
+            mask=robot_mask
+            | 0b0010
+            | resource_mask,  # Detects robots, obstacles, and goals
             group=self.robot_group,  # Ignores itself
         )
 
@@ -141,12 +160,8 @@ class RobotBase(Box):
             self.controller.set_apis(sensors, controls, debug)
 
     def set_motor_values(self, left: float, right: float):
-        # Clamp the values to -1, 1
-        left = max(-1, min(1, left))
-        right = max(-1, min(1, right))
-
-        self._left_motor = left
-        self._right_motor = right
+        self.motor_l.request_force_scaled(force_scaler=left)
+        self.motor_r.request_force_scaled(force_scaler=right)
 
     def set_message(self, message: str):
         self.message = message
@@ -251,9 +266,14 @@ class RobotBase(Box):
                     self.received_messages.append(robot.message)
 
         # Update speedometer
-        distance_cm = self.body.position.get_distance(self.old_pos)
-        self.speedometer = self.sim.meta.convert_speed(cm_per_frame=distance_cm)
-        self.old_pos = self.body.position
+        dist_moved: Vec2d = self.body.velocity
+        direction_vector = Vec2d(1, 0).rotated(self.body.angle)
+        dist_travelled = dist_moved.dot(direction_vector)
+        self.speedometer = Speed.in_base_unit(dist_travelled)
+
+        # Other IComponents
+        for component in self.components:
+            component.preupdate()
 
     def postupdate(self):
         self.light_detectors.clear()
@@ -265,6 +285,10 @@ class RobotBase(Box):
             if time() < oldest.timestamp + 5:
                 break
             self.debug_messages.pop(0)
+
+        # Other IComponents
+        for component in self.components:
+            component.postupdate()
 
     def print(self, message: any, pop_up: bool = False):
         # Print in terminal with color
@@ -344,16 +368,6 @@ class RobotBase(Box):
     def draw(self, surface):
         super().draw(surface)
 
-        # Draw wheels
-        left = self.body.local_to_world(self._wheel_pos_left)
-        right = self.body.local_to_world(self._wheel_pos_right)
-        pygame.draw.circle(
-            surface, (0, 0, 0), self.sim.meta.pymunk_to_pygame_point(left, surface), self.sim.meta.pymunk_to_pygame_scale(self._wheel_size)
-        )
-        pygame.draw.circle(
-            surface, (0, 0, 0), self.sim.meta.pymunk_to_pygame_point(right, surface), self.sim.meta.pymunk_to_pygame_scale(self._wheel_size)
-        )
-
         # Draw direction
         right_up = self.body.local_to_world((self.right[0], self.right[1] + 1))
         right_down = self.body.local_to_world((self.right[0], self.right[1] - 1))
@@ -370,11 +384,11 @@ class RobotBase(Box):
             ],
         )
 
-
-
         # Draw light emitter
         if self.light_switch:
-            x, y = self.sim.meta.pymunk_to_pygame_point(self.body.position, surface=surface)
+            x, y = self.sim.meta.pymunk_to_pygame_point(
+                self.body.position, surface=surface
+            )
             pygame.draw.circle(
                 surface=surface,
                 color=(255, 255, 0),
@@ -394,7 +408,7 @@ class RobotBase(Box):
             text_rect = text_surface.get_rect()
             text_pos = self.sim.meta.pymunk_to_pygame_point(
                 point=(
-                    self.body.position.x + self.side_length // 2 + 10,
+                    self.body.position.x + self.spec.robot_diameter.base_unit // 2 + 10,
                     self.body.position.y,
                 ),
                 surface=surface,
@@ -402,25 +416,23 @@ class RobotBase(Box):
             text_rect.midleft = text_pos
             surface.blit(text_surface, text_rect)
 
+        # Other IComponents
+        for component in self.components:
+            component.draw()
+
+        # Other IComponents
+        for component in self.components:
+            component.draw_debug()
+
     def update(self):
         # todo change
         self.controller_update()
         if self.controller:
             self.controller.update()
 
-        self._force_left = self._calc_motor_force(self._left_motor)
-        self._force_right = self._calc_motor_force(self._right_motor)
-
-        if not self.ignore_battery:
-            self.battery_remaining -= self._calc_power_consumption()
-            if self.battery_remaining <= 0:
-                self.battery_remaining = 0
-                self._force_left = 0
-                self._force_right = 0
-                self.color = self.down_color
-
-        self.body.apply_force_at_local_point((self._force_left, 0), self.top)
-        self.body.apply_force_at_local_point((self._force_right, 0), self.bottom)
+        # Other IComponents
+        for component in self.components:
+            component.update()
 
         forward = pymunk.Vec2d(1, 0).rotated(self.body.angle)
         velocity_along_forward = self.body.velocity.dot(forward)
@@ -428,21 +440,3 @@ class RobotBase(Box):
 
     def controller_update(self):
         pass
-
-    def _calc_robot_mass(self):
-        return self.battery_volume * BATTERY_DENSITY + self.motor_volume * MOTOR_DENSITY
-
-    def _calc_motor_force(self, motor_value: float):
-        # TODO: Figure out the proper unit and convertion
-        return motor_value * self.motor_volume * MOTOR_FORCE_SCALER
-
-    def _calc_power_consumption(self):
-        # TODO: Figure out the proper unit and convertion
-        return (
-            (abs(self._left_motor) + abs(self._right_motor))
-            * self.motor_volume
-            * MOTOR_POWER_SCALER
-        )
-
-    def _calc_robot_density(self):
-        return self.mass / self.total_volume
