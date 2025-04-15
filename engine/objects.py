@@ -15,13 +15,13 @@ class IGameObject:
         shape: pymunk.Shape,
         density: float = 1,
         virtual_height: float = 1,
-        sim: SimulationBase = None,
+        sim: "SimulationBase" = None,
     ):
         self.body: pymunk.Body = body
         self.shape: pymunk.Shape = shape
         self.density = density
         self.virtual_height = virtual_height
-        self.sim: SimulationBase = sim
+        self.sim: "SimulationBase" = sim
         if self.sim is not None:
             self.sim.add_game_object(self)
 
@@ -60,7 +60,7 @@ class Box(IGameObject):
     density: float = 1
     virtual_height: float = 1
     trigger: bool = False
-    sim: SimulationBase = None
+    sim: "SimulationBase" = None
 
     def __post_init__(self):
         self.body: pymunk.Body = pymunk.Body()
@@ -105,7 +105,7 @@ class Circle(IGameObject):
     density: float = 1
     virtual_height: float = 1
     trigger: bool = False
-    sim: SimulationBase = None
+    sim: "SimulationBase" = None
 
     def __post_init__(self):
         self.body = pymunk.Body()

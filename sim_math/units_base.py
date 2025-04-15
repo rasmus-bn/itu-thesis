@@ -62,9 +62,12 @@ class UnitBase:
         else:
             raise TypeError(f"Unsupported type for {operation_name}: {type(other)}")
 
-    def to_str(self, unit: UnitConverter) -> str:
+    def to_str(self, unit: UnitConverter, decimals=None) -> str:
         """Return the value in the specified unit as a string."""
-        return f"{self._convert_to(unit)} {unit.name}"
+        value = self._convert_to(unit)
+        if decimals is not None:
+            value = round(value, decimals)
+        return f"{value} {unit.name}"
 
     # String Magic Methods
     def __repr__(self) -> str:

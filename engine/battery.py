@@ -41,6 +41,9 @@ class Battery(IBattery):
             return True
         watt_to_consume = volts * amps
         requested_power_wh = watt_to_consume / self.meta.hour_to_frames
+        # print(
+        #     f"Volts: {volts}, Amps: {amps}, Wh: {requested_power_wh}, remaining: {self.remaining__wh}"
+        # )
         # Return false if the requested power exceeds the remaining capacity
         if requested_power_wh > self.remaining__wh:
             return False

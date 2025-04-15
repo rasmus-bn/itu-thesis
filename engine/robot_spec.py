@@ -1,15 +1,19 @@
 import math
 
 from engine.types import IRobotSpec
-from sim_math.units import Density3d, Distance, Mass, Volume
+from sim_math.units import Density2d, Density3d, Distance, Mass, Torque, Volume
 from sim_math.world_meta import WorldMeta
 
 
 class Assumptions:
     MOTOR_DENSITY = Density3d.in_kg_m3(5_500)
     BATTERY_DENSITY = Density3d.in_kg_m3(2_500)
-    BATTERY_CAPACITY_TO_MASS_RATIO = 150  # Wh/kg
-    TORQUE_TO_MOTOR_MASS_RATIO = 3  # Nm/kg
+    # BATTERY_CAPACITY_TO_MASS_RATIO = 150  # Wh/kg
+    BATTERY_CAPACITY_TO_MASS_RATIO = 200  # Wh/kg TODO: Unrealistic value
+    # TORQUE_TO_MOTOR_MASS_RATIO = 8  # Nm/kg
+    TORQUE_TO_MOTOR_MASS_RATIO = 40  # Nm/kg # TODO: Unrealistic value
+    # VOLTAGE_TO_MOTOR_MASS_RATIO = 10  # V/kg
+    VOLTAGE_TO_MOTOR_MASS_RATIO = 70  # V/kg# TODO: Unrealistic value
 
 
 class RobotSpec(IRobotSpec):
@@ -41,13 +45,16 @@ class RobotSpec(IRobotSpec):
         wheel_radius = height * 0.8 / 2
 
         ### Physics
-        density = self._calc_density3d(mass=battery_mass + motor_mass, volume=volume)
-        density2d = density.to_2d(height=height)
+        density3d = self._calc_density3d(mass=battery_mass + motor_mass, volume=volume)
+        density2d = density3d.to_2d(height=height)
 
         ### Robot performance
         capacity = battery_mass.kg * Assumptions.BATTERY_CAPACITY_TO_MASS_RATIO
         mass_per_motor = motor_mass / 2
-        max_motor_torque = mass_per_motor.kg * Assumptions.TORQUE_TO_MOTOR_MASS_RATIO
+        max_motor_torque = Torque.in_nm(
+            mass_per_motor.kg * Assumptions.TORQUE_TO_MOTOR_MASS_RATIO
+        )
+        max_motor_voltage = mass_per_motor.kg * Assumptions.VOLTAGE_TO_MOTOR_MASS_RATIO
 
         super().__init__(
             # Robot dimensions
@@ -59,6 +66,11 @@ class RobotSpec(IRobotSpec):
             # Robot performance
             battery_capacity__wh=capacity,
             max_motor_torque=max_motor_torque,
+            max_motor_voltage=max_motor_voltage,
+            # Meta data
+            robot_volume=volume,
+            mass=battery_mass + motor_mass,
+            robot_density_3d=density3d,
         )
 
     def _cube_root(self, value: float) -> float:
@@ -73,7 +85,7 @@ class RobotSpec(IRobotSpec):
             m = mass (kg)
             D = density (kg/m³)
         """
-        return Volume.in_base_unit(mass.kg / density3d.in_kg_m3)
+        return Volume.in_m3(mass.kg / density3d.kg_m3)
 
     def _calc_density3d(self, mass: Mass, volume: Volume) -> Density3d:
         """
@@ -85,3 +97,22 @@ class RobotSpec(IRobotSpec):
             V = volume (m³)
         """
         return Density3d.in_kg_m3(mass.kg / volume.m3)
+
+    def get_spec_sheet(self) -> str:
+        def r(value: float, decimals: int) -> float:
+            return round(value, decimals)
+
+        return (
+            f"----------------------------------------------\n"
+            f"Robot Diameter: {self.robot_diameter.to_str(Distance.M, 2)}\n"
+            f"Robot Height: {self.robot_height.to_str(Distance.M, 2)}\n"
+            f"Wheel Radius: {self.wheel_radius.to_str(Distance.M, 2)}\n"
+            f"Robot Density 2D (engine): {self.robot_density_2d.to_str(Density2d.KG_M2, 2)}\n"
+            f"Robot Density 3D (real world): {self.robot_density_3d.to_str(Density3d.KG_M3, 3)}\n"
+            f"Battery Capacity: {r(self.battery_capacity__wh, 2)} Wh\n"
+            f"Max Motor Torque: {self.max_motor_torque.to_str(Torque.NM, 2)}\n"
+            f"Max Motor Voltage: {r(self.max_motor_voltage, 2)} V\n"
+            f"Robot Volume: {self.robot_volume.to_str(Volume.M3, 2)} or {self.robot_volume.to_str(Volume.CM3, 2)} \n"
+            f"Mass: {self.mass.to_str(Mass.KG, 3)}\n"
+            f"----------------------------------------------\n"
+        )

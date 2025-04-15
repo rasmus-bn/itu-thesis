@@ -46,36 +46,8 @@ class RobotBase(Circle):
         robot_collision: bool = True,
         debug_color: IColor = None,
     ):
-        # RobotSpec
         self.spec = robot_spec
         self._comms_range = 50
-
-        # DC battery
-        self.battery: IBattery = Battery(
-            meta=sim.meta,
-            capacity__wh=self.spec.battery_capacity__wh,
-            infinite_power=ignore_battery,
-        )
-        # Left AC Motor
-        self.motor_l: IMotor = AcMotor(
-            meta=sim.meta,
-            battery=self.battery,
-            body=self.body,
-            max_torque=self.spec.max_motor_torque,
-            wheel_position=self.top,
-            wheel_radius=self.spec.wheel_radius,
-        )
-        # Right AC Motor
-        self.motor_r: IMotor = AcMotor(
-            meta=sim.meta,
-            battery=self.battery,
-            body=self.body,
-            max_torque=self.spec.max_motor_torque,
-            wheel_position=self.bottom,
-            wheel_radius=self.spec.wheel_radius,
-        )
-        # List of all IComponents
-        self.components: list[IComponent] = [self.battery, self.motor_l, self.motor_r]
 
         self.message: None | str = None
         self.received_messages: list[str] = []
@@ -114,6 +86,36 @@ class RobotBase(Circle):
             density=self.spec.robot_density_2d.base_unit,
             sim=sim,
         )
+
+        # DC battery
+        self.battery: IBattery = Battery(
+            meta=sim.meta,
+            body=self.body,
+            capacity__wh=self.spec.battery_capacity__wh,
+            infinite_power=ignore_battery,
+        )
+        # Left AC Motor
+        self.motor_l: IMotor = AcMotor(
+            meta=sim.meta,
+            battery=self.battery,
+            body=self.body,
+            max_torque=self.spec.max_motor_torque,
+            max_voltage=self.spec.max_motor_voltage,
+            wheel_position=self.top,
+            wheel_radius=self.spec.wheel_radius,
+        )
+        # Right AC Motor
+        self.motor_r: IMotor = AcMotor(
+            meta=sim.meta,
+            battery=self.battery,
+            body=self.body,
+            max_torque=self.spec.max_motor_torque,
+            max_voltage=self.spec.max_motor_voltage,
+            wheel_position=self.bottom,
+            wheel_radius=self.spec.wheel_radius,
+        )
+        # List of all IComponents
+        self.components: list[IComponent] = [self.battery, self.motor_l, self.motor_r]
 
         # Speedometer
         self.speedometer = Speed.in_base_unit(0)
@@ -271,6 +273,8 @@ class RobotBase(Circle):
         dist_travelled = dist_moved.dot(direction_vector)
         self.speedometer = Speed.in_base_unit(dist_travelled)
 
+        # if self.battery.capacity__wh > :
+
         # Other IComponents
         for component in self.components:
             component.preupdate()
@@ -418,11 +422,11 @@ class RobotBase(Circle):
 
         # Other IComponents
         for component in self.components:
-            component.draw()
+            component.draw(surface=surface)
 
         # Other IComponents
         for component in self.components:
-            component.draw_debug()
+            component.draw_debug(surface=surface)
 
     def update(self):
         # todo change

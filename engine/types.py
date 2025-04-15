@@ -4,7 +4,7 @@ from time import time
 from pygame import Surface
 from pymunk import Body, Vec2d
 from engine.objects import IGameObject
-from sim_math.units import Density2d, Distance, Force, Torque
+from sim_math.units import Density2d, Density3d, Distance, Force, Mass, Torque, Volume
 from sim_math.world_meta import WorldMeta
 
 
@@ -115,3 +115,9 @@ class IRobotSpec:
     # Robot performance
     battery_capacity__wh: float
     max_motor_torque: Torque
+    max_motor_voltage: float
+
+    # Meta data
+    robot_volume: Volume
+    mass: Mass
+    robot_density_3d: Density3d

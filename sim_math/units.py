@@ -248,7 +248,7 @@ class Torque(UnitBase):
             T = torque (Nm)
             r = radius (m)
         """
-        return Force.in_base_unit(self / radius)
+        return Force.in_base_unit(self.base_unit / radius.base_unit)
 
 
 class Speed(UnitBase):

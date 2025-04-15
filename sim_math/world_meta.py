@@ -1,4 +1,4 @@
-from sim_math.units import Speed, TimeSpan
+from sim_math.units import AngularSpeed, Speed, TimeSpan
 
 
 class WorldMeta:
@@ -28,6 +28,7 @@ class WorldMeta:
         # Initilize units
         TimeSpan.initialize(fps=fps)
         Speed.initialize(fps=fps)
+        AngularSpeed.initialize(fps=fps)
 
         # Derived units
         self.km_to_cm = 100_000

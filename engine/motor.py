@@ -11,9 +11,9 @@ def non_zero(value: float) -> float:
 
 class AcMotor(IMotor):
     # Assumed values
-    KT = 0.1  # Torque constant - Nm/A (kT)
-    KE = 0.1  # Back EMF constant - V/(rad/s) (kE)
-    RESISTANCE = 0.1  # Resistance - Ohm (R)
+    KT = 0.2  # Torque constant - Nm/A (kT)
+    KE = 40  # Back EMF constant - V/krpm (kE)
+    RESISTANCE = 0.02  # Resistance - Ohm (R)
 
     def __init__(
         self,
@@ -21,6 +21,7 @@ class AcMotor(IMotor):
         battery: IBattery,
         body: Body,
         max_torque: Torque,
+        max_voltage: float,
         wheel_position: tuple[float, float],
         wheel_radius: Distance,
         unrestricted_force: bool = False,
@@ -34,14 +35,17 @@ class AcMotor(IMotor):
             wheel_radius=wheel_radius,
         )
         self.max_force = max_torque.to_force_at(radius=wheel_radius)
+        self.max_voltage = max_voltage
         self._wheel_speed = AngularSpeed.in_base_unit(0.0)
         self._back_emf__v = 0.0
         self._force = Force.in_base_unit(0.0)
         self._unrestricted_force = unrestricted_force
         self._draw_debug = draw_debug
 
+        self._ke__rad_s = AngularSpeed.in_rpm(AcMotor.KE * 1000).rad_s
+
         # Purely for visualization
-        self._wheel_size = self.meta.pymunk_to_pygame_scale(4)
+        self._wheel_size = self.wheel_radius.base_unit
         self._wheel_pos_left = (
             self.wheel_position[0] * 0.9,
             self.wheel_position[1] * 0.9,
@@ -80,7 +84,7 @@ class AcMotor(IMotor):
             surface=surface,
             color=(0, 0, 0),
             center=self.meta.pymunk_to_pygame_point(global_pos, surface),
-            radius=self._wheel_size,
+            radius=self.meta.pymunk_to_pygame_scale(self._wheel_size),
         )
 
     def _apply_force(self):
@@ -90,8 +94,13 @@ class AcMotor(IMotor):
         requested_torque = self._force.to_torque_at(radius=self.wheel_radius)
         amps = self._calc_amps_from_desired_torque(t=requested_torque)
         volts = self._calc_volts_to_achieve_amps(amps=amps)
+        volts = min(volts, self.max_voltage)
         volts = self.battery.get_volts(volts=volts)
         got_power = self.battery.draw_power(volts=volts, amps=amps)
+
+        # print(
+        #     f"Requested torque: {requested_torque.nm} Nm, requested force: {self._force.n} N, Amps: {amps}, Volts: {volts}, Back EMF {self._back_emf__v}, Got power: {got_power}, remaining: {self.battery.remaining__wh} Wh"
+        # )
 
         if got_power:
             # Forward force
@@ -118,7 +127,7 @@ class AcMotor(IMotor):
             kE = back EMF constant (V/(rad/s))
             ω = wheel speed (rad/s)
         """
-        self._back_emf__v = self.KE * self._wheel_speed.rad_s
+        self._back_emf__v = self._ke__rad_s * self._wheel_speed.rad_s
 
     def _calc_amps_from_desired_torque(self, t: Torque) -> float:
         """Calculates the required amps based on the desired torque.
