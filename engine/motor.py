@@ -2,7 +2,7 @@ from typing import override
 import pygame
 from pymunk import Body, Vec2d
 from engine.types import IBattery, IMotor
-from sim_math.units import AngularSpeed, Distance, Force, Torque
+from sim_math.units import AngularSpeed, Distance, Force, Speed, Torque
 
 
 def non_zero(value: float) -> float:
@@ -13,7 +13,7 @@ class AcMotor(IMotor):
     # Assumed values
     KT = 0.2  # Torque constant - Nm/A (kT)
     KE = 40  # Back EMF constant - V/krpm (kE)
-    RESISTANCE = 0.02  # Resistance - Ohm (R)
+    RESISTANCE = 0.1  # Resistance - Ohm (R)
 
     def __init__(
         self,
@@ -36,6 +36,7 @@ class AcMotor(IMotor):
         )
         self.max_force = max_torque.to_force_at(radius=wheel_radius)
         self.max_voltage = max_voltage
+        self._wheel_prev_pos = self.body.local_to_world(self.wheel_position)
         self._wheel_speed = AngularSpeed.in_base_unit(0.0)
         self._back_emf__v = 0.0
         self._force = Force.in_base_unit(0.0)
@@ -98,9 +99,7 @@ class AcMotor(IMotor):
         volts = self.battery.get_volts(volts=volts)
         got_power = self.battery.draw_power(volts=volts, amps=amps)
 
-        # print(
-        #     f"Requested torque: {requested_torque.nm} Nm, requested force: {self._force.n} N, Amps: {amps}, Volts: {volts}, Back EMF {self._back_emf__v}, Got power: {got_power}, remaining: {self.battery.remaining__wh} Wh"
-        # )
+        # print(f"Requested torque: {requested_torque.nm:.2f} Nm, requested force: {self._force.n:.2f} N, Amps: {amps:.2f}, Volts: {volts:.2f}, Back EMF {self._back_emf__v:.2f}, Got power: {got_power:.2f}, remaining: {self.battery.remaining__wh:.2f} Wh")
 
         if got_power:
             # Forward force
@@ -109,10 +108,14 @@ class AcMotor(IMotor):
 
     def _calc_wheel_speed(self):
         """Calculates the wheel speed in rad/s based on the distance traveled by the wheel."""
-        dist_vector: Vec2d = self.body.velocity_at_local_point(self.wheel_position)
+        current_pos = self.body.local_to_world(self.wheel_position)
+        dist_vector = current_pos - self._wheel_prev_pos
+        self._wheel_prev_pos = current_pos
+
         direction_vector = Vec2d(1, 0).rotated(self.body.angle)
         # The distance traveled in the direction of the wheel
         dist_in_direction = dist_vector.dot(direction_vector)
+
         # Calculates the wheel speed in rad/timestep
         self._wheel_speed = AngularSpeed.in_base_unit(
             non_zero(dist_in_direction) / self.wheel_radius.base_unit
