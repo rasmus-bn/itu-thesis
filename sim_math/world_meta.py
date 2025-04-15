@@ -1,3 +1,6 @@
+from sim_math.units import AngularSpeed, Speed, TimeSpan
+
+
 class WorldMeta:
     def __init__(
         self,
@@ -22,13 +25,25 @@ class WorldMeta:
         # Time
         self.fps = fps
 
+        # Initilize units
+        TimeSpan.initialize(fps=fps)
+        Speed.initialize(fps=fps)
+        AngularSpeed.initialize(fps=fps)
+
         # Derived units
         self.km_to_cm = 100_000
+        self.m_to_cm = 100
         self.hour_to_seconds = 3_600
+        self.hour_to_frames = self.fps * self.hour_to_seconds
         self.cm_frames_to_km_h = self.fps * (self.hour_to_seconds / self.km_to_cm)
+        self.newton_to_g_cm_2 = 100_000
 
     def pymunk_to_pygame_point(self, point: tuple, surface):
-        return (point[0] - self.camera_offset[0])*self.camera_scale + self.base_offset[0], (point[1] - self.camera_offset[1])*-1*self.camera_scale + self.base_offset[1]
+        return (
+            point[0] - self.camera_offset[0]
+        ) * self.camera_scale + self.base_offset[0], (
+            point[1] - self.camera_offset[1]
+        ) * -1 * self.camera_scale + self.base_offset[1]
 
     def pymunk_to_pygame_scale(self, value: float):
         return int(value * self.camera_scale)

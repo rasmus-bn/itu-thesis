@@ -6,6 +6,7 @@ from engine.environment import Resource
 from engine.types import IWaypointData
 from random import choice, randint
 from sim_math.angles import normalize_angle
+from sim_math.units import Speed
 
 
 class RobotState(Enum):
@@ -23,7 +24,7 @@ class RandomRecruitController(BaseController):
         self.state = RobotState.SEARCH  # initial state
         self.target_waypoint: IWaypointData | None = None
         self.visited_waypoints: list[IWaypointData] = []
-        self.max_speed = 0.0
+        self.max_speed = Speed(0.0)
         self.RECRUITMENT_THRESHOLD = 1 / 5  # speed threshold where the robot will start recruiting
         self.path_qualifier = None
         self.PID = PID(Kp=0.92712943, Ki=0.0, Kd=0.11295359)

@@ -1,6 +1,7 @@
 from pymunk import vec2d
 
 from engine.types import ILightData, IWaypointData
+from sim_math.units import Speed
 
 
 class RobotSensorAPI:
@@ -35,5 +36,5 @@ class RobotSensorAPI:
     def get_light_detectors(self) -> list[ILightData]:
         return self._robot.light_detectors.copy()
 
-    def get_robot_speed(self) -> float:
+    def get_robot_speed(self) -> Speed:
         return self._robot.speedometer

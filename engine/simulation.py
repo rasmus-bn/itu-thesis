@@ -219,8 +219,9 @@ class SimulationBase:
 
     def add_game_object(self, obj: IGameObject):
         obj.sim = self
-        self._game_objects.append(obj)
-        self.space.add(obj.body, obj.shape)
+        if obj not in self._game_objects:
+            self._game_objects.append(obj)
+            self.space.add(obj.body, obj.shape)
 
     def remove_game_object(self, obj: IGameObject):
         if obj in self._game_objects:

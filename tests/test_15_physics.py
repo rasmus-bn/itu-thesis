@@ -1,19 +1,39 @@
 from engine.environment import Environment, Resource
 from engine.robot import RobotBase
+from engine.robot_spec import RobotSpec
 from engine.simulation import SimulationBase
 import pygame
+
+from sim_math.units import Mass
 
 SIZE_X = 1280
 SIZE_Y = 720
 
-sim = SimulationBase(pixels_x=SIZE_X, pixels_y=SIZE_Y, enable_realtime=True, enable_display=True)
+sim = SimulationBase(
+    pixels_x=SIZE_X, pixels_y=SIZE_Y, enable_realtime=True, enable_display=True
+)
 
 
 class ManualRobotBase(RobotBase):
     static_count = 0
 
-    def __init__(self, battery_capacity, motor_strength, position=(0, 0), angle=0, controller=None, ignore_battery=False, **kwargs):
-        super().__init__(battery_capacity, motor_strength, position=position, angle=angle, controller=controller, ignore_battery=ignore_battery)
+    def __init__(
+        self,
+        robot_spec: RobotSpec,
+        position=(0, 0),
+        angle=0,
+        controller=None,
+        ignore_battery=False,
+        **kwargs,
+    ):
+        super().__init__(
+            robot_spec=robot_spec,
+            sim=sim,
+            position=position,
+            angle=angle,
+            controller=controller,
+            ignore_battery=ignore_battery,
+        )
         self.num = ManualRobotBase.static_count
         ManualRobotBase.static_count += 1
 
@@ -23,24 +43,21 @@ class ManualRobotBase(RobotBase):
 
         keys = pygame.key.get_pressed()  # Get key states
         controlSchemes = [
-            {
-                "up": keys[pygame.K_UP],
-                "down": keys[pygame.K_DOWN],
-                "left": keys[pygame.K_LEFT],
-                "right": keys[pygame.K_RIGHT],
-                "attach": keys[pygame.K_SPACE]
-            },
+            # {
+            #     "up": keys[pygame.K_UP],
+            #     "down": keys[pygame.K_DOWN],
+            #     "left": keys[pygame.K_LEFT],
+            #     "right": keys[pygame.K_RIGHT],
+            #     "attach": keys[pygame.K_SPACE],
+            # },
             {
                 "up": keys[pygame.K_w],
                 "down": keys[pygame.K_s],
                 "left": keys[pygame.K_a],
                 "right": keys[pygame.K_d],
-                "attach": keys[pygame.K_e]
+                "attach": keys[pygame.K_e],
             },
         ]
-        print("Wheel velocity:")
-        print(self.body.velocity_at_local_point(self._wheel_pos_left))
-        print(self.body.angle)
 
         # Movement Controls (values accumulate)
         if controlSchemes[self.num]["up"]:  # Move Forward
@@ -76,12 +93,23 @@ if __name__ == "__main__":
     env = Environment(sim)
     env.generate_resources(5)
 
-    # Create manual robot 1 controlled by arrow keys
-    manual_robot = ManualRobotBase(ignore_battery=True, battery_capacity=100000, motor_strength=100000, position=(SIZE_X // 2, SIZE_Y // 2))
-    sim.add_game_object(manual_robot)
+    robot_spec = RobotSpec(
+        meta=sim.meta,
+        battery_mass=Mass.in_kg(537),
+        motor_mass=Mass.in_kg(51),
+    )
+    print(robot_spec.get_spec_sheet())
 
-    # Create manual robot 2 controlled by wasd keys
-    manual_robot = ManualRobotBase(ignore_battery=True, battery_capacity=100000, motor_strength=100000, position=(SIZE_X // 2, SIZE_Y // 2))
-    sim.add_game_object(manual_robot)
+    # Create manual robot 1 controlled by arrow keys
+    manual_robot = ManualRobotBase(
+        robot_spec=robot_spec,
+        position=(0, 0),
+    )
+
+    # # Create manual robot 2 controlled by wasd keys
+    # manual_robot = ManualRobotBase(
+    #     robot_spec=robot_spec,
+    #     position=(0, 0),
+    # )
 
     sim.run()
