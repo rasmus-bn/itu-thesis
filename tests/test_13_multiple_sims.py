@@ -2,13 +2,24 @@ import multiprocessing
 from dataclasses import dataclass
 import pygame
 import os
-import time
 from random import uniform
 from algorithms.random_and_recruit_controller import RandomRecruitController
 from engine.debug_colors import Colors
+from algorithms.waypoint_controller import WaypointController
 from engine.environment import Environment
 from engine.robot import RobotBase
 from engine.simulation import SimulationBase
+
+
+def pid_simulation(screensize: (int, int)):
+    sim = SimulationBase(pixels_x=screensize[0], pixels_y=screensize[1], enable_realtime=True, enable_display=True)
+    env = Environment(sim)
+    env.generate_waypoints(distance=100, x_count=3, y_count=3, homebase_threshold=30)
+    controller = WaypointController()
+    robot = RobotBase(5000, 10000, position=(0, 0), angle=0, controller=controller, ignore_battery=True, robot_collision=False)
+    robot.color = (255, 0, 0)  # Red
+    sim.add_game_object(robot)
+    sim.run()
 
 
 def test_simulation(screensize: (int, int)):
@@ -21,7 +32,7 @@ def test_simulation(screensize: (int, int)):
     MOTOR_STRENGTH = MAX_SIZE // 2
 
     # ENVIRONMENT
-    sim = SimulationBase(pixels_x=screensize[0], pixels_y=screensize[1], enable_realtime=False, enable_display=True)
+    sim = SimulationBase(pixels_x=screensize[0], pixels_y=screensize[1], enable_realtime=False, enable_display=True, initial_zoom=0.25)
     env = Environment(sim)
     env.generate_waypoints(distance=100, x_count=11, y_count=11, homebase_threshold=100)
     env.generate_resources(count=RESOURCES_COUNT, radius=RESOURCES_SIZE, min_dist=200, max_dist=500)
@@ -68,11 +79,11 @@ def main():
         # Start the simulations with parameters for duration
         window_size = (200, 200)
 
-        COUNT = 4
+        COUNT = 8
         processes = []
 
         for index in range(COUNT):
-            x = 50 + (index%5 * (window_size[0] + 50))
+            x = 50 + (index % 5 * (window_size[0] + 50))
             y = 100 + (index // 5) * (window_size[1] + 50)  # Adjust y after every 4 instances
             window_position = (x, y)
             process = multiprocessing.Process(
@@ -94,3 +105,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # pid_simulation((300, 300))

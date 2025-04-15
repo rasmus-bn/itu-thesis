@@ -31,3 +31,9 @@ class RobotControlAPI:
 
     def toggle_light(self):
         self._robot.light_switch = not self._robot.light_switch
+
+    def increment_counter(self, key: str):
+        self._robot.sim.increment_counter(key)
+
+    def get_input(self):
+        return self._robot.sim.get_inputs()
