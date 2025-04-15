@@ -25,11 +25,18 @@ class SimulationBase:
     run_time: float = None
     environment: Environment = None
     physics_thread = True
-    physics_sync_event = threading.Event()
+    physics_sync_event = None
+    initial_zoom: float = 1.0
+    time_limit_seconds: float | None = None
+    counters: dict = None
+    inputs: list[float] = None
+    windows_caption: str | None = None
 
     def __post_init__(self):
         self._game_objects: IGameObject = []
         self._tethers: list[Tether] = []
+        self.counters = {}
+        self.physics_sync_event = threading.Event()
 
         # Physics
         self.delta_time = 1 / self.fps
@@ -48,6 +55,7 @@ class SimulationBase:
             screen_width=self.pixels_x,
             screen_height=self.pixels_y,
             background_color=self.background_color,
+            camera_scale=self.initial_zoom
         )
 
     def _start(self):
@@ -59,6 +67,8 @@ class SimulationBase:
             pygame.init()
             self._display = pygame.display.set_mode((self.pixels_x, self.pixels_y))
             self._clock = pygame.time.Clock()
+            if self.windows_caption:
+                pygame.display.set_caption(self.windows_caption)
 
     def _quit(self):
         self.physics_thread = False
@@ -68,7 +78,7 @@ class SimulationBase:
         self.end_time = time()
         run_time = self.end_time - self.start_time
         expected_time = self.frame_count / self.fps
-        print(f"Ran faster by a factor of {expected_time / run_time}")
+        # print(f"Ran faster by a factor of {expected_time / run_time}")
 
         # Visualization
         if self.enable_display:
@@ -79,7 +89,8 @@ class SimulationBase:
             self._run()
         except KeyboardInterrupt:
             self._quit()
-            return
+
+        return self.counters
 
     def _run(self):
         self._start()
@@ -102,6 +113,12 @@ class SimulationBase:
                 self._update()
                 self._postupdate()
 
+                # Check quit
+                if self.time_limit_seconds:
+                    simulation_time = self.frame_count / self.fps
+                    if simulation_time >= self.time_limit_seconds:
+                        self.physics_thread = False
+
         physics_thread = threading.Thread(target=run_physics)
         physics_thread.start()
 
@@ -112,7 +129,8 @@ class SimulationBase:
                 actual_delta_time = (pygame.time.get_ticks() - self.last_time) / 1000
                 self.last_time = pygame.time.get_ticks()
                 if actual_delta_time > self.delta_time_alert:
-                    print(f"Warning: Frame took {actual_delta_time} seconds, expected {self.delta_time}")
+                    pass
+                    # print(f"Warning: Frame took {actual_delta_time} seconds, expected {self.delta_time}")
 
                 # Move camera
                 self._update_camera()
@@ -122,6 +140,12 @@ class SimulationBase:
                     if event.type == pygame.QUIT:
                         self._quit()
                         return
+
+                # Quit if physics loop is stopped
+                if not self.physics_thread:
+                    self._quit()
+                    return
+
                 # Update visuals
                 self._update_visuals()
                 # Update the screen
@@ -214,6 +238,12 @@ class SimulationBase:
 
     def set_environment(self, env: Environment):
         self.environment = env
+
+    def increment_counter(self, key: str):
+        self.counters[key] = self.counters.get(key, 0) + 1
+
+    def get_inputs(self):
+        return self.inputs
 
 
 if __name__ == "__main__":

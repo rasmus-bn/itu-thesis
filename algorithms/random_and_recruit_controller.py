@@ -27,7 +27,7 @@ class RandomRecruitController(BaseController):
         self.max_speed = Speed(0.0)
         self.RECRUITMENT_THRESHOLD = 1 / 5  # speed threshold where the robot will start recruiting
         self.path_qualifier = None
-        self.PID = PID(Kp=3, Ki=0.0, Kd=0.3)
+        self.PID = PID(Kp=0.92712943, Ki=0.0, Kd=0.11295359)
         self.BASE_SPEED = 0.8
         self.show_pop_ups = False
 
@@ -208,7 +208,8 @@ class RandomRecruitController(BaseController):
         neighbor = self.visited_waypoints[-1].neighbors.get(direction)
         if neighbor is None:
             print("Falling back to random waypoint")
-            neighbor = self.get_random_waypoint()
+            neighbor = self.HOME_BASE_WAYPOINT
+            # neighbor = self.get_random_waypoint()
         return neighbor
 
     def find_home_base_waypoint(self) -> IWaypointData:

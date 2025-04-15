@@ -10,13 +10,14 @@ class RobotState(Enum):
 
 
 class WaypointController(BaseController):
-    def __init__(self, counter_steering=0.0):
+    def __init__(self, counter_steering=0.0, kp=3.0, ki=0.0, kd=0.3):
         super().__init__()
         self.base_speed = 0.5
         self.counter_steering = counter_steering
         self.state = RobotState.FOLLOW_TRACK
         self.waypoint_index = 0
-        self.pid = PID(Kp=3, Ki=0.0, Kd=0.3)
+        # self.pid = PID(Kp=3, Ki=0.0, Kd=0.3)
+        self.pid = PID(Kp=kp, Ki=ki, Kd=kd)
 
     def robot_start(self):
         pass
@@ -40,6 +41,7 @@ class WaypointController(BaseController):
         # Update waypoint index when close to the current target
         if track[self.waypoint_index].position.get_distance(self.sensors.get_robot_position()) < waypoint_distance // 4:
             self.waypoint_index = (self.waypoint_index + 1) % len(track)
+            self.controls.increment_counter("waypoints_reached")
 
         # Primary target waypoint
         target_waypoint = track[self.waypoint_index]
