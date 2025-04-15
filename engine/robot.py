@@ -119,6 +119,7 @@ class RobotBase(Circle):
 
         # Speedometer
         self.speedometer = Speed.in_base_unit(0)
+        self._prev_pos = self.body.position
 
         # Purely for visualization
         self._wheel_size = 4
@@ -268,10 +269,11 @@ class RobotBase(Circle):
                     self.received_messages.append(robot.message)
 
         # Update speedometer
-        dist_moved: Vec2d = self.body.velocity
+        dist_vector: Vec2d = self.body.position - self._prev_pos
+        self._prev_pos = self.body.position
         direction_vector = Vec2d(1, 0).rotated(self.body.angle)
-        dist_travelled = dist_moved.dot(direction_vector)
-        self.speedometer = Speed.in_base_unit(dist_travelled)
+        dist_in_direction = dist_vector.dot(direction_vector)
+        self.speedometer = Speed.in_base_unit(dist_in_direction)
 
         # if self.battery.capacity__wh > :
 

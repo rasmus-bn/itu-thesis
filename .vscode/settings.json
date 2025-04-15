@@ -1,5 +1,7 @@
 {
   "python.testing.pytestArgs": ["pytest"],
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestEnabled": true
+  "python.testing.pytestEnabled": true,
+  "prettier.printWidth": 10000,
+  "ruff.lineLength": 320
 }
