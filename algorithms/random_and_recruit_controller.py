@@ -36,12 +36,14 @@ class RandomRecruitController(BaseController):
         self.ALL_WAYPOINTS: list[IWaypointData] = None
         self.WAYPOINTS_DICT: dict[str, IWaypointData] = None
         self.WAYPOINT_GAP: float = None
+        self.WAYPOINT_THRESHOLD: float = None
 
     def robot_start(self):
         self.WAYPOINT_GAP = self.sensors.get_waypoint_distance()
         self.ALL_WAYPOINTS = self.sensors.get_all_waypoints()
         self.WAYPOINTS_DICT = self.sensors.get_waypoints_dict()
         self.HOME_BASE_WAYPOINT = self.find_home_base_waypoint()
+        self.WAYPOINT_THRESHOLD = self.sensors.get_robot_diameter()/2
 
     def switch_state(self, state: RobotState):
         self.target_waypoint = None
@@ -74,7 +76,7 @@ class RandomRecruitController(BaseController):
                 return self.switch_state(RobotState.RETRIEVE)
 
         # if arrived at the waypoint, get new waypoint
-        if self.target_waypoint.position.get_distance(robot_position) < self.WAYPOINT_GAP // 4:
+        if self.target_waypoint.position.get_distance(robot_position) < self.WAYPOINT_THRESHOLD:
             self.visited_waypoints.append(self.target_waypoint)
             self.target_waypoint = self.get_random_waypoint()
 
@@ -144,7 +146,7 @@ class RandomRecruitController(BaseController):
                     self.target_waypoint = self.get_next_waypoint_home()
 
         # move to next waypoint on the way to home base
-        if self.target_waypoint.position.get_distance(robot_position) < self.WAYPOINT_GAP // 4:
+        if self.target_waypoint.position.get_distance(robot_position) < self.WAYPOINT_THRESHOLD:
             if len(self.visited_waypoints) == 0:
                 return self.switch_state(RobotState.SEARCH)
             self.target_waypoint = self.get_next_waypoint_home()
@@ -174,7 +176,7 @@ class RandomRecruitController(BaseController):
             self.target_waypoint = self.get_waypoint_by_angle(global_light_angle)
 
         # if arrived at waypoint get a new one
-        if self.target_waypoint.position.get_distance(robot_position) < self.WAYPOINT_GAP // 4:
+        if self.target_waypoint.position.get_distance(robot_position) < self.WAYPOINT_THRESHOLD:
             self.visited_waypoints.append(self.target_waypoint)
             self.target_waypoint = self.get_waypoint_by_angle(global_light_angle)
 

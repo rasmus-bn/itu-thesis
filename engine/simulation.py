@@ -58,6 +58,9 @@ class SimulationBase:
             camera_scale=self.initial_zoom
         )
 
+    def get_time_running(self):
+        return self.frame_count / self.fps
+
     def _start(self):
         self.start_time = time()
 
@@ -182,7 +185,7 @@ class SimulationBase:
                 tether.draw(self._display)
 
             # Draw camera position in lower-left corner
-            font = pygame.font.SysFont(None, 24)
+            font = pygame.font.SysFont(None, 20)
             cam_x, cam_y = self.meta.camera_offset
             cam_text = font.render(f"Cam: ({int(cam_x)}, {int(cam_y)}) Zoom: {self.meta.camera_scale:.2f}", True, (200, 200, 200))
 
@@ -242,8 +245,14 @@ class SimulationBase:
     def increment_counter(self, key: str):
         self.counters[key] = self.counters.get(key, 0) + 1
 
+    def set_counter(self, key: str, value):
+        self.counters[key] = value
+
     def get_inputs(self):
         return self.inputs
+
+    def safe_quit(self):
+        self.physics_thread = False
 
 
 if __name__ == "__main__":

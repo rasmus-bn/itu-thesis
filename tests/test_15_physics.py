@@ -6,11 +6,11 @@ import pygame
 
 from sim_math.units import Mass
 
-SIZE_X = 1280
-SIZE_Y = 720
+SIZE_X = 400
+SIZE_Y = 400
 
 sim = SimulationBase(
-    pixels_x=SIZE_X, pixels_y=SIZE_Y, enable_realtime=True, enable_display=True
+    pixels_x=SIZE_X, pixels_y=SIZE_Y, enable_realtime=True, enable_display=True, initial_zoom=0.25
 )
 
 
@@ -95,8 +95,8 @@ if __name__ == "__main__":
 
     robot_spec = RobotSpec(
         meta=sim.meta,
-        battery_mass=Mass.in_kg(537),
-        motor_mass=Mass.in_kg(51),
+        battery_mass=Mass.in_kg(100),
+        motor_mass=Mass.in_kg(100),
     )
     print(robot_spec.get_spec_sheet())
 

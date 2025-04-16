@@ -99,7 +99,7 @@ class AcMotor(IMotor):
         got_power = self.battery.draw_power(volts=volts, amps=amps)
 
         # print(
-        #     f"Requested torque: {requested_torque.nm} Nm, requested force: {self._force.n} N, Amps: {amps}, Volts: {volts}, Back EMF {self._back_emf__v}, Got power: {got_power}, remaining: {self.battery.remaining__wh} Wh"
+        #     f"Requested torque: {requested_torque.nm:9.2f} Nm, : {self._force.n:9.2f} N, Amps: {amps:9.2f}, Volts: {volts:12.2f}, Back EMF {self._back_emf__v:12.2f}, Got power: {got_power:9.2f}, remaining: {self.battery.remaining__wh:9.2f} Wh"
         # )
 
         if got_power:

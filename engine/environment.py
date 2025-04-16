@@ -3,6 +3,8 @@ import pymunk
 import math
 from engine.objects import Circle, Box
 from engine.types import IWaypointData
+from typing import TYPE_CHECKING
+if TYPE_CHECKING: from engine.simulation import SimulationBase
 
 
 class Environment:
@@ -10,10 +12,11 @@ class Environment:
         self.waypoint_distance = None
         self.waypointData: list[IWaypointData] = []
         self.waypoints = None
-        self.sim = sim
+        self.sim: SimulationBase= sim
         self.homebase = HomeBase(0, 0)
         self.sim.add_game_object(self.homebase)
         self.resources = []
+        self.resources_generated_count = 0
         self.collected_count = 0
 
         # Register collision handler for HomeBase (1) and Resource (2)
@@ -26,7 +29,8 @@ class Environment:
     def get_homebase(self):
         return self.homebase
 
-    def generate_resources(self, count, min_dist=100, max_dist=1000, radius=30):
+    def generate_resources(self, count, min_dist=500, max_dist=1000, radius=30):
+        self.resources_generated_count = count
         self.resources = []
         for _ in range(count):
             distance = random.randint(min_dist, max_dist)
@@ -98,8 +102,13 @@ class Environment:
             # Clean all references
             self.resources.remove(resource)
             self.sim.remove_game_object(resource)
+
             self.collected_count += 1
-            print(f"Collecting resource {resource}, number {self.collected_count}", )
+            self.sim.increment_counter("collected_resources")
+            if self.collected_count >= self.resources_generated_count:
+                self.sim.set_counter("finished_early_time", self.sim.get_time_running())
+                self.sim.safe_quit()  # todo: check if this works? maybe this is not the right way to quit the thread
+
         else:
             print("error: cannot find resource", resource)
 

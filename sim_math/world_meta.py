@@ -46,7 +46,7 @@ class WorldMeta:
         ) * -1 * self.camera_scale + self.base_offset[1]
 
     def pymunk_to_pygame_scale(self, value: float):
-        return int(value * self.camera_scale)
+        return max(1, int(value * self.camera_scale))
 
     def convert_speed(self, cm_per_frame: float) -> float:
         """Calculate the speed in km/h from cm/frame"""

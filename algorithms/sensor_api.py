@@ -1,12 +1,14 @@
 from pymunk import vec2d
-
 from engine.types import ILightData, IWaypointData
 from sim_math.units import Speed
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING: from engine.robot import RobotBase
 
 
 class RobotSensorAPI:
     def __init__(self, robot):
-        self._robot = robot
+        self._robot: RobotBase = robot
 
     def get_lidar(self):
         return self._robot.ir_sensors
@@ -38,3 +40,6 @@ class RobotSensorAPI:
 
     def get_robot_speed(self) -> Speed:
         return self._robot.speedometer
+
+    def get_robot_diameter(self) -> float:
+        return self._robot.spec.robot_diameter.base_unit
