@@ -33,7 +33,7 @@ def simulation(solution, screen_size, caption, realtime_display, time_limit) -> 
         windows_caption=caption
     )
     env = Environment(sim)
-    env.generate_waypoints(distance=90, x_count=31, y_count=31, homebase_threshold=80)
+    env.generate_waypoints(distance=90, x_count=31, y_count=31, homebase_threshold=80, visible=False)
     env.generate_resources(count=RESOURCES_COUNT, radius=RESOURCES_SIZE)
     for i in range(robot_count):
         controller = RandomRecruitController()
@@ -74,7 +74,7 @@ def fitness_func(instance: pygad.GA, solution, solution_idx):
 
     # Running simulation
     TIME_LIMIT = 60
-    REALTIME_AND_DISPLAY = False
+    REALTIME_AND_DISPLAY = True
     counters = simulation(solution, SCREEN_SIZE, caption, REALTIME_AND_DISPLAY, TIME_LIMIT)
     collected_resources = counters.get("collected_resources", 0)
     completed_time = counters.get("finished_early_time", TIME_LIMIT)
@@ -123,5 +123,5 @@ def run_ga():
 
 if __name__ == "__main__":
     # Fitness = (array([81., 0.4016737]), np.float64(51.87319884726225), np.int64(0))
-    simulation([81, 0.4016737], (300, 300), "test_14_pygad_multi", True, 60)
-    # run_ga()
+    # simulation([71, 0.2], (300, 300), "test_14_pygad_multi", True, 60)
+    run_ga()

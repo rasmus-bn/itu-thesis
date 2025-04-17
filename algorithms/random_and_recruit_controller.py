@@ -236,6 +236,11 @@ class RandomRecruitController(BaseController):
         # Apply the movement
         control = self.PID.compute(angle_to_target)  # Compute PID correction
         turn = max(-1, min(1, control))  # Clamp turn value to [-1, 1]
-        left_motor = self.BASE_SPEED - turn
-        right_motor = self.BASE_SPEED + turn
+        # Turn in place if angle is large
+        if abs(angle_to_target) > math.radians(90):
+            left_motor = -turn
+            right_motor = turn
+        else:
+            left_motor = self.BASE_SPEED - turn
+            right_motor = self.BASE_SPEED + turn
         self.controls.set_motor_values(left_motor, right_motor)
