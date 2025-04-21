@@ -284,12 +284,13 @@ class AngularSpeed(UnitBase):
 
     RAD_S: UnitConverter = UnitConverter(value_in_base_unit=None, name="rad/s")
     RPM: UnitConverter = UnitConverter(value_in_base_unit=None, name="rpm")
+    KRPM: UnitConverter = UnitConverter(value_in_base_unit=None, name="krpm")
 
     @classmethod
     def initialize(cls, fps: int) -> None:
         AngularSpeed.RAD_S.value_in_base_unit = 1 * fps
-        # 1 rpm = (rad/s) * 60 / 2pi
-        AngularSpeed.RPM.value_in_base_unit = (1 * fps) * (60 / (2 * math.pi))
+        AngularSpeed.RPM.value_in_base_unit = AngularSpeed.RAD_S.value_in_base_unit * (60 / (2 * math.pi))
+        AngularSpeed.KRPM.value_in_base_unit = AngularSpeed.RPM.value_in_base_unit / 1000
 
     @classmethod
     def in_rad_s(cls, value: float) -> Self:
@@ -299,6 +300,10 @@ class AngularSpeed(UnitBase):
     def in_rpm(cls, value: float) -> Self:
         return cls._in_unit(value, cls.RPM)
 
+    @classmethod
+    def in_krpm(cls, value: float) -> Self:
+        return cls._in_unit(value, cls.KRPM)
+
     @property
     def rad_s(self) -> float:
         return self._convert_to(AngularSpeed.RAD_S)
@@ -306,3 +311,7 @@ class AngularSpeed(UnitBase):
     @property
     def rpm(self) -> float:
         return self._convert_to(AngularSpeed.RPM)
+
+    @property
+    def krpm(self) -> float:
+        return self._convert_to(AngularSpeed.KRPM)

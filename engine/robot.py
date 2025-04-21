@@ -5,7 +5,7 @@ from algorithms.debug_api import RobotDebugAPI
 from algorithms.sensor_api import RobotSensorAPI
 from engine.battery import Battery
 from engine.debug_colors import IColor
-from engine.motor import AcMotor
+from engine.motor import DcMotor
 from engine.simulation import SimulationBase
 from engine.tether import Tether
 from engine.gpt_generated.closest_point_on_circle import closest_point_on_circle
@@ -95,22 +95,22 @@ class RobotBase(Circle):
             infinite_power=ignore_battery,
         )
         # Left AC Motor
-        self.motor_l: IMotor = AcMotor(
+        self.motor_l: IMotor = DcMotor(
             meta=sim.meta,
             battery=self.battery,
             body=self.body,
             max_torque=self.spec.max_motor_torque,
-            max_voltage=self.spec.max_motor_voltage,
+            # max_voltage=self.spec.max_motor_voltage,
             wheel_position=self.top,
             wheel_radius=self.spec.wheel_radius,
         )
         # Right AC Motor
-        self.motor_r: IMotor = AcMotor(
+        self.motor_r: IMotor = DcMotor(
             meta=sim.meta,
             battery=self.battery,
             body=self.body,
             max_torque=self.spec.max_motor_torque,
-            max_voltage=self.spec.max_motor_voltage,
+            # max_voltage=self.spec.max_motor_voltage,
             wheel_position=self.bottom,
             wheel_radius=self.spec.wheel_radius,
         )

@@ -4,7 +4,7 @@ from engine.robot_spec import RobotSpec
 from engine.simulation import SimulationBase
 import pygame
 
-from sim_math.units import Mass
+from sim_math.units import Mass, Speed
 
 SIZE_X = 1280
 SIZE_Y = 720
@@ -12,6 +12,7 @@ SIZE_Y = 720
 sim = SimulationBase(
     pixels_x=SIZE_X, pixels_y=SIZE_Y, enable_realtime=True, enable_display=True
 )
+sim.meta.camera_scale = 0.1
 
 
 class ManualRobotBase(RobotBase):
@@ -43,13 +44,6 @@ class ManualRobotBase(RobotBase):
 
         keys = pygame.key.get_pressed()  # Get key states
         controlSchemes = [
-            # {
-            #     "up": keys[pygame.K_UP],
-            #     "down": keys[pygame.K_DOWN],
-            #     "left": keys[pygame.K_LEFT],
-            #     "right": keys[pygame.K_RIGHT],
-            #     "attach": keys[pygame.K_SPACE],
-            # },
             {
                 "up": keys[pygame.K_w],
                 "down": keys[pygame.K_s],
@@ -80,7 +74,13 @@ class ManualRobotBase(RobotBase):
                 else:
                     print(f"cannot attach: {obj}")
 
+        print(f"Robot speed: {self.speedometer.to_str(Speed.KM_H, 2)}")
+        # if self.speedometer.km_h > 5:
+        #     motor_left = 0
+        #     motor_right = 0
         self.set_motor_values(motor_left, motor_right)
+
+        print(self.spec.get_spec_sheet())
 
 
 if __name__ == "__main__":
@@ -105,11 +105,15 @@ if __name__ == "__main__":
         robot_spec=robot_spec,
         position=(0, 0),
     )
+    manual_robot.motor_l.print_math = True
+    # manual_robot.motor_r._print_reasoning = True
 
-    # # Create manual robot 2 controlled by wasd keys
-    # manual_robot = ManualRobotBase(
-    #     robot_spec=robot_spec,
-    #     position=(0, 0),
-    # )
+    manual_robot.battery.draw_debugging = True
+
+    # Hacks vv
+    manual_robot.battery.power_draw_scaler = 10  # Battery drains x times faster
+    motor_force_scaler = 5  # Motor force is x times stronger
+    manual_robot.motor_l.motor_force_scaler = motor_force_scaler
+    manual_robot.motor_r.motor_force_scaler = motor_force_scaler
 
     sim.run()
