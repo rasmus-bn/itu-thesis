@@ -12,38 +12,27 @@ class Battery(IBattery):
         body: Body,
         capacity__wh: float,
         initial__wh: float = None,
-        max_voltage__v: float = None,
-        ignore_max_voltage: bool = False,
         infinite_power: bool = False,
-        draw_debug: bool = False,
+        draw_debugging: bool = False,
+        power_draw_scaler: float = 1.0,
     ):
         super().__init__(
             meta=meta,
             body=body,
             capacity__wh=capacity__wh,
             remaining__wh=capacity__wh if initial__wh is None else initial__wh,
+            infinite_power=infinite_power,
+            draw_debugging=draw_debugging,
+            power_draw_scaler=power_draw_scaler,
         )
-        self._max_voltage__v = max_voltage__v
-        self._ignore_max_voltage = ignore_max_voltage
-        self._infinite_power = infinite_power
-        self._draw_debug = draw_debug
-
-    @override
-    def get_volts(self, volts: float):
-        if self._max_voltage__v:
-            return min(volts, self._max_voltage__v)
-        else:
-            return volts
 
     @override
     def draw_power(self, volts: float, amps: float) -> bool:
-        if self._infinite_power:
+        if self.infinite_power:
             return True
         watt_to_consume = volts * amps
         requested_power_wh = watt_to_consume / self.meta.hour_to_frames
-        # print(
-        #     f"Volts: {volts}, Amps: {amps}, Wh: {requested_power_wh}, remaining: {self.remaining__wh}"
-        # )
+        requested_power_wh *= self.power_draw_scaler
         # Return false if the requested power exceeds the remaining capacity
         if requested_power_wh > self.remaining__wh:
             return False
@@ -54,28 +43,40 @@ class Battery(IBattery):
 
     @override
     def draw_debug(self, surface):
-        if not self._draw_debug:
+        if not self.draw_debugging:
             return
-        # Draw battery capacity bar
-        bar_width = self.meta.pymunk_to_pygame_scale(100)
-        bar_height = self.meta.pymunk_to_pygame_scale(10)
-        bar_x = self.body.position.x - bar_width / 2
-        bar_y = self.body.position.y + self.meta.pymunk_to_pygame_scale(20)
-        # Calculate the width of the filled part based on remaining capacity
-        filled_width = (self.remaining__wh / self.capacity__wh) * bar_width
-        # Draw the empty part
+        # Draw battery vertical capacity bar
+        bar_width = 10
+        bar_height = 30
+        bar_position = self.meta.pymunk_to_pygame_point(self.body.position, surface=surface)
+        bar_position = (bar_position[0] - self.meta.pymunk_to_pygame_scale(200) - bar_width, bar_position[1] - bar_height / 2)
+
+        # Draw the background part
         pygame.draw.rect(
             surface=surface,
-            color=(30, 30, 30),
-            rect=self.meta.pymunk_to_pygame_point(
-                bar_x + filled_width, bar_y, bar_width - filled_width, bar_height
+            color=(255, 0, 0),
+            rect=pygame.Rect(
+                bar_position[0],
+                bar_position[1],
+                bar_width,
+                bar_height,
             ),
         )
         # Draw the filled part
+        filled_height = int(bar_height * (self.remaining__wh / self.capacity__wh))
         pygame.draw.rect(
             surface=surface,
             color=(0, 255, 0),
-            rect=self.meta.pymunk_to_pygame_point(
-                bar_x, bar_y, filled_width, bar_height
+            rect=pygame.Rect(
+                bar_position[0],
+                bar_position[1] + (bar_height - filled_height),
+                bar_width,
+                filled_height,
             ),
         )
+        # Write the remaining percentage
+        font = pygame.font.Font(None, 15)
+        remaining_percentage = (self.remaining__wh / self.capacity__wh) * 100
+        text = font.render(f"{remaining_percentage:.1f}%", True, (255, 255, 255))
+        text_rect = text.get_rect(center=(bar_position[0] + bar_width / 2, bar_position[1] - 10))
+        surface.blit(text, text_rect)

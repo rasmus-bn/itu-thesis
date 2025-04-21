@@ -213,8 +213,11 @@ def test_speed(first, second):
     "first, second",
     [
         (AngularSpeed.in_rad_s(60), AngularSpeed.in_base_unit(1)),
-        (AngularSpeed.in_rpm(1), AngularSpeed.in_rad_s(0.10471975511965977)),
-        (AngularSpeed.in_rad_s(1), AngularSpeed.in_rpm(9.549296585513721)),
+        (AngularSpeed.in_rpm(1), AngularSpeed.in_rad_s(0.10471975499999982)),
+        (AngularSpeed.in_rad_s(1), AngularSpeed.in_rpm(9.5492965964254)),
+        (AngularSpeed.in_krpm(1), AngularSpeed.in_rad_s(104.71975499999982)),
+        (AngularSpeed.in_krpm(1), AngularSpeed.in_rpm(1000)),
+        (AngularSpeed.in_rpm(1), AngularSpeed.in_krpm(0.001)),
     ],
 )
 def test_angular_speed(first, second):
