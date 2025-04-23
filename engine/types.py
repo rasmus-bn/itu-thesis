@@ -78,10 +78,11 @@ class IBattery(IComponent):
     meta: WorldMeta
     body: Body
     capacity__wh: float
-    remaining__wh: float = 0
-
-    def get_volts(self, requested_volts: float) -> float:
-        raise NotImplementedError("This method should be implemented in a subclass")
+    remaining__wh: float
+    # Hacks vv
+    infinite_power: bool
+    draw_debugging: bool
+    power_draw_scaler: float
 
     def draw_power(self, volts: float, amps: float) -> float:
         raise NotImplementedError("This method should be implemented in a subclass")
@@ -94,6 +95,11 @@ class IMotor(IComponent):
     body: Body
     wheel_position: tuple[float, float]
     wheel_radius: Distance
+    # Hacks vv
+    unrestricted_force: bool
+    draw_debugging: bool
+    print_math: bool
+    motor_force_scaler: float
 
     def request_force(self, force: Force) -> None:
         raise NotImplementedError("This method should be implemented in a subclass")
@@ -115,9 +121,12 @@ class IRobotSpec:
     # Robot performance
     battery_capacity__wh: float
     max_motor_torque: Torque
-    max_motor_voltage: float
+    # max_motor_voltage: float
 
     # Meta data
     robot_volume: Volume
-    mass: Mass
+    battery_mass: Mass
+    motor_mass: Mass
+    other_mass: Mass
+    total_mass: Mass
     robot_density_3d: Density3d
