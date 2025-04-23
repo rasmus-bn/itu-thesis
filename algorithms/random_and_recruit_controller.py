@@ -131,13 +131,13 @@ class RandomRecruitController(BaseController):
                 self.WAYPOINTS_DICT[int(waypoint_id)] for waypoint_id in other_path
             ]
 
-            # Recieved shorter path
+            # Received shorter path
             if len(resolved_path) < len(full_path):
                 self.debug.print(f"Adopting shorter path {other_qualifier}", self.show_pop_ups)
                 self.visited_waypoints = resolved_path
                 self.path_qualifier = other_qualifier
                 self.target_waypoint = self.get_next_waypoint_home()
-            # Recieved different path with equal length
+            # Received different path with equal length
             if len(resolved_path) == len(full_path):
                 if other_qualifier < self.path_qualifier:
                     self.debug.print(f"Adopting equal path by qualifier {other_qualifier}", self.show_pop_ups)
