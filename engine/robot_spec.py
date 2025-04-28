@@ -14,18 +14,18 @@ class Assumptions:
     BATTERY_CAPACITY_TO_MASS_RATIO = 150  # Wh/kg
     TORQUE_TO_MOTOR_MASS_RATIO = 8  # Nm/kg
     VOLTAGE_TO_MOTOR_MASS_RATIO = 10  # V/kg
-    OTHER_MATERIALS_PERCENTAGE = 80  # %
 
 
 class RobotSpec(IRobotSpec):
-    def __init__(self, meta: WorldMeta, battery_mass: Mass, motor_mass: Mass):
+    def __init__(self, meta: WorldMeta, battery_mass: Mass, motor_mass: Mass, other_materials_mass: Mass):
         self._meta = meta
 
         ### Robot dimensions
         motor_volume = self._calc_volume(mass=motor_mass, density3d=Assumptions.MOTOR_DENSITY)
         battery_volume = self._calc_volume(mass=battery_mass, density3d=Assumptions.BATTERY_DENSITY)
-        other_materials_mass = Mass.in_base_unit((Assumptions.OTHER_MATERIALS_PERCENTAGE / 100 * (motor_mass.base_unit + battery_mass.base_unit)) / (1 - Assumptions.OTHER_MATERIALS_PERCENTAGE / 100))
         total_mass = battery_mass + motor_mass + other_materials_mass
+
+        # print(battery_mass.kg, motor_mass.kg, other_materials_mass.kg)
 
         other_materials_volume = self._calc_volume(mass=other_materials_mass, density3d=Assumptions.OTHER_MATERIALS_DENSITY)
         volume = battery_volume + motor_volume + other_materials_volume

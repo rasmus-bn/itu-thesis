@@ -22,23 +22,24 @@ class WorldParams:
 
 
 WORLDS: List[WorldParams] = [
-    WorldParams(id=0, resource_count=50, resource_radius=10, min_dist=500, max_dist=1000),  # World 0: 200 small resources
-    WorldParams(id=1, resource_count=10, resource_radius=50, min_dist=500, max_dist=1000),  # World 1: 30 medium resources
-    WorldParams(id=2, resource_count=3, resource_radius=200, min_dist=500, max_dist=1000),  # World 2: 3 large resources
-    WorldParams(id=3, resource_count=10, resource_radius=50, min_dist=300, max_dist=500),   # World 3: close by resources
-    WorldParams(id=4, resource_count=10, resource_radius=50, min_dist=800, max_dist=1000),  # World 4: far away located resources
-    WorldParams(id=5, resource_count=10, resource_radius=50, min_dist=500, max_dist=1000),  # World 5: Obstacles included
+    WorldParams(id=0, resource_count=50, resource_radius=10, min_dist=500, max_dist=1400),  # World 0: 200 small resources
+    WorldParams(id=1, resource_count=10, resource_radius=50, min_dist=500, max_dist=1400),  # World 1: 30 medium resources
+    WorldParams(id=2, resource_count=3, resource_radius=200, min_dist=500, max_dist=1400),  # World 2: 3 large resources
+    WorldParams(id=3, resource_count=10, resource_radius=50, min_dist=400, max_dist=500),   # World 3: close by resources
+    WorldParams(id=4, resource_count=10, resource_radius=50, min_dist=1300, max_dist=1400),  # World 4: far away located resources
+    # WorldParams(id=5, resource_count=10, resource_radius=50, min_dist=500, max_dist=1000),  # World 5: Obstacles included
 ]
 
 
 def simulation(solution, screen_size, caption, realtime_display, time_limit, world: WorldParams) -> dict:
     robot_count = int(solution[0])
     motor_ratio = solution[1]
-    agent_motor_weight, agent_battery_weight = get_single_robot(COLONY_TOTAL_WEIGHT, robot_count, motor_ratio)
+    agent_motor_weight, agent_battery_weight, other_materials_weight = get_single_robot(COLONY_TOTAL_WEIGHT, robot_count, motor_ratio)
 
     # ROBOT
     motor_mass = Mass.in_kg(agent_motor_weight)
     battery_mass = Mass.in_kg(agent_battery_weight)
+    other_materials_mass = Mass.in_kg(other_materials_weight)
 
     # ENVIRONMENT
     RESOURCES_COUNT = world.resource_count
@@ -54,16 +55,17 @@ def simulation(solution, screen_size, caption, realtime_display, time_limit, wor
         windows_caption=caption
     )
     env = Environment(sim)
-    env.generate_waypoints(distance=90, x_count=31, y_count=31, homebase_threshold=80, visible=False)
+    env.generate_waypoints(distance=100, x_count=31, y_count=31, homebase_threshold=80, visible=True)
     env.generate_resources(count=world.resource_count, radius=world.resource_radius, min_dist=world.min_dist, max_dist=world.max_dist)
     for i in range(robot_count):
         controller = RandomRecruitController()
         robot_spec = RobotSpec(
             meta=sim.meta,
             motor_mass=motor_mass,
-            battery_mass=battery_mass
+            battery_mass=battery_mass,
+            other_materials_mass=other_materials_mass,
         )
-        # print(robot_spec.get_spec_sheet())
+        print(robot_spec.get_spec_sheet())
         robot = RobotBase(
             sim=sim,
             robot_spec=robot_spec,
@@ -85,5 +87,5 @@ if __name__ == "__main__":
     print("Test 17: different worlds")
     for worldParams in WORLDS:
         print(f"testing world: {str(worldParams.id)} Resource Count:{worldParams.resource_count} Resource Size:{worldParams.resource_radius}");
-        simulation([71, 0.2], (300, 300), "test_14_pygad_multi", True, 10, worldParams)
+        simulation([4, 0.25], (300, 300), "test_14_pygad_multi", True, 10, worldParams)
 

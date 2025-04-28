@@ -29,7 +29,7 @@ class Environment:
     def get_homebase(self):
         return self.homebase
 
-    def generate_resources(self, count, min_dist=500, max_dist=1000, radius=30):
+    def generate_resources(self, count, min_dist=500, max_dist=1000, radius=30, color=(255, 0, 0)):
         self.resources_generated_count = count
         self.resources = []
         for _ in range(count):
@@ -37,7 +37,7 @@ class Environment:
             angle = random.uniform(0, 2 * math.pi)
             x = distance * math.cos(angle)
             y = distance * math.sin(angle)
-            resource = Resource(x, y, radius)
+            resource = Resource(x, y, radius, color)
             self.resources.append(resource)
             self.sim.add_game_object(resource)
 
@@ -116,7 +116,7 @@ class Environment:
 
 
 class Waypoint(Circle):
-    def __init__(self, x, y, radius=5, color=(40, 255, 40), homebase_position=(0, 0), homebase_threshold=50, visible=True):
+    def __init__(self, x, y, radius=5, color=(40, 40, 40), homebase_position=(0, 0), homebase_threshold=50, visible=True):
         super().__init__(x=x, y=y, radius=radius, color=color)
         self.shape.sensor = True
         self.is_homebase = False
@@ -145,6 +145,6 @@ class Resource(Circle):
 
 
 class HomeBase(Box):
-    def __init__(self, x, y, width=200, length=200, color=(40, 40, 40)):
+    def __init__(self, x, y, width=200, length=200, color=(80, 80, 80)):
         super().__init__(x=x, y=y, width=width, length=length, color=color, trigger=True)
         self.shape.collision_type = 1  # Set collision type for homebase

@@ -22,7 +22,6 @@ def simulation(solution, screen_size, caption, realtime_display, time_limit) -> 
     motor_mass = Mass.in_kg(agent_motor_weight)
     battery_mass = Mass.in_kg(agent_battery_weight)
     other_materials_mass = Mass.in_kg(other_materials_weight)
-
     # ENVIRONMENT
     sim = SimulationBase(
         pixels_x=screen_size[0],
@@ -35,7 +34,7 @@ def simulation(solution, screen_size, caption, realtime_display, time_limit) -> 
         windows_caption=caption
     )
     env = Environment(sim)
-    env.generate_waypoints(distance=90, x_count=31, y_count=31, homebase_threshold=80, visible=False)
+    env.generate_waypoints(distance=90, x_count=31, y_count=31, homebase_threshold=80, visible=True)
     env.generate_resources(count=RESOURCES_COUNT, radius=RESOURCES_SIZE)
     for i in range(robot_count):
         controller = RandomRecruitController()
@@ -76,8 +75,8 @@ def fitness_func(instance: pygad.GA, solution, solution_idx):
     caption = f"Gen {generations_completed} Ind {solution_idx}"
 
     # Running simulation
-    TIME_LIMIT = 60
-    REALTIME_AND_DISPLAY = True
+    TIME_LIMIT = 30
+    REALTIME_AND_DISPLAY = False
     counters = simulation(solution, SCREEN_SIZE, caption, REALTIME_AND_DISPLAY, TIME_LIMIT)
     collected_resources = counters.get("collected_resources", 0)
     completed_time = counters.get("finished_early_time", TIME_LIMIT)
@@ -100,25 +99,29 @@ def run_ga():
     ]
 
     ga_instance = pygad.GA(
-        num_generations=50,
-        num_parents_mating=6,
+        save_solutions=True,
+        save_best_solutions=True,
+        num_generations=4,
+        num_parents_mating=2,
         fitness_func=fitness_func,
-        sol_per_pop=30,
+        sol_per_pop=8,
         num_genes=2,
         gene_space=gene_space,
         mutation_type="random",
-        mutation_num_genes=1,
-        crossover_type="uniform",
-        keep_parents=5,
+        mutation_num_genes=2,
+        crossover_type=None,
+        parent_selection_type="rws",  # Roulette Wheel Selection
+        keep_parents=0,
         parallel_processing=['process', 8],
         on_generation=on_generation
     )
 
-    # RUN the GA process
-    ga_instance.run()
+    ga_instance.run()                     # RUN the GA process
 
-    # Plot fitness after the run
-    ga_instance.plot_fitness()
+    ga_instance.plot_fitness()            # 1. Plot Fitness over Generations
+    ga_instance.plot_genes()              # 2. Plot Genes (gene values across generations)
+    ga_instance.plot_new_solution_rate()  # 3. Plot New Solution Rate (how many new solutions per generation)
+
     solution, solution_fitness, _ = ga_instance.best_solution()
     print("Best solution:", solution)
     print("Best fitness (score):", solution_fitness)
