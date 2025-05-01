@@ -1,7 +1,10 @@
 from engine.environment import Environment, Resource
 from engine.robot import RobotBase
 from engine.simulation import SimulationBase
-import pygame
+try:
+    import pygame
+except ImportError:
+    pass
 import math
 
 from sim_math.angles import normalize_angle

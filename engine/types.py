@@ -1,11 +1,15 @@
 from dataclasses import dataclass
 from enum import Enum, auto
 from time import time
-from pygame import Surface
 from pymunk import Body, Vec2d
 from engine.objects import IGameObject
 from sim_math.units import Density2d, Density3d, Distance, Force, Mass, Torque, Volume
 from sim_math.world_meta import WorldMeta
+
+try:
+    from pygame import Surface
+except ImportError:
+    class Surface: pass
 
 
 @dataclass

@@ -1,5 +1,8 @@
 from typing import override
-import pygame
+try:
+    import pygame
+except ImportError:
+    pass
 from pymunk import Body
 from engine.types import IBattery
 from sim_math.world_meta import WorldMeta

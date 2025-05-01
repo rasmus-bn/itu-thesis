@@ -1,6 +1,9 @@
 import multiprocessing
 from dataclasses import dataclass
-import pygame
+try:
+    import pygame
+except ImportError:
+    pass
 import os
 import time
 

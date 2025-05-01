@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from time import time
-import pygame
+try:
+    import pygame
+except ImportError:
+    pass
 import pymunk
 import threading
 

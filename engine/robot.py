@@ -1,4 +1,7 @@
-import pygame
+try:
+    import pygame
+except ImportError:
+    pass
 
 from algorithms.control_api import RobotControlAPI
 from algorithms.debug_api import RobotDebugAPI

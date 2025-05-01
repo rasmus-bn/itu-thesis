@@ -2,7 +2,10 @@ from engine.environment import Environment, Resource
 from engine.robot import RobotBase
 from engine.robot_spec import RobotSpec
 from engine.simulation import SimulationBase
-import pygame
+try:
+    import pygame
+except ImportError:
+    pass
 
 from sim_math.units import Mass, Speed
 

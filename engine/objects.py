@@ -1,7 +1,10 @@
 import math
 from dataclasses import dataclass
-from pygame import Surface
-import pygame
+try:
+    import pygame
+    from pygame import Surface
+except ImportError:
+    class Surface: pass
 import pymunk
 
 from typing import TYPE_CHECKING

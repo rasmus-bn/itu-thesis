@@ -1,5 +1,8 @@
-from pygame import Surface
-import pygame
+try:
+    import pygame
+    from pygame import Surface
+except ImportError:
+    class Surface: pass
 import pymunk
 from pymunk import Vec2d
 from engine.objects import IGameObject

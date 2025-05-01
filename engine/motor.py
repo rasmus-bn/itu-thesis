@@ -1,6 +1,9 @@
 from collections.abc import Callable
 from typing import override
-import pygame
+try:
+    import pygame
+except ImportError:
+    pass
 from pymunk import Body, Vec2d
 from engine.types import IBattery, IMotor
 from sim_math.units import AngularSpeed, Distance, Force, TimeSpan, Torque
