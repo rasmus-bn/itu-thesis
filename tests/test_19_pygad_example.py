@@ -1,4 +1,6 @@
 from pygad import pygad
+from datetime import datetime
+
 
 val = 0
 all_fitness_per_gen = []
@@ -41,23 +43,27 @@ def run_ga():
         random_mutation_min_val=-100,
         random_mutation_max_val=100,
         save_solutions=True,
+        # parallel_processing=['process', 4],
     )
 
+    # run
     ga_instance.run()
-    # ga_instance
-    ga_instance.plot_fitness()
-    ga_instance.plot_genes()
-    ga_instance.plot_new_solution_rate()
-    # ga_instance.plot_pareto_front_curve()
 
+    # save
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"ga_instance_world{0}_{timestamp}"
+    ga_instance.save(filename)
+    ga_instance.plot_fitness(save_dir=filename)
+        
+    # ga_instance.plot_genes()
+    # ga_instance.plot_new_solution_rate()
+    # ga_instance.plot_pareto_front_curve()
 
     solution, solution_fitness, _ = ga_instance.best_solution()
     print(f"Best solution: {solution} | Best fitness: {solution_fitness}")
 
-    ga_instance.save()
 
-
-def plot_it():
+def plot_it(filename=None):
     # Calculate Statistics
     generations = range(len(all_fitness_per_gen))
     best_fitness_per_gen = [max(fitnesses) for fitnesses in all_fitness_per_gen]
@@ -85,9 +91,13 @@ def plot_it():
     ax.set_xlabel("Generation")
     ax.set_ylabel("Fitness")
     ax.legend()
-    plt.show()
+
+    if filename:
+        plt.savefig(filename)
+    else:
+        plt.show()
 
 
-if __name__ == "__main__":
-    run_ga()
-    plot_it()
+# if __name__ == "__main__":
+#     run_ga()
+#     # plot_it()

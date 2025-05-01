@@ -1,24 +1,21 @@
-FROM python:3.13-slim
-
-ENV POETRY_VIRTUALENVS_CREATE=false
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        curl \
-        build-essential && \
-    curl -sSL https://install.python-poetry.org | python3 -
-
-ENV PATH="/root/.local/bin:$PATH"
-
+# Stage 1 - Install build dependencies
+FROM python:3.13-alpine AS builder
+RUN apk add --no-cache \
+    build-base \
+    sdl2-dev \
+    gcc
 WORKDIR /app
-
-COPY pyproject.toml poetry.lock* ./
-
-RUN poetry install --no-root && \
-    apt-get purge -y build-essential && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
-
+RUN python -m venv .venv && .venv/bin/pip install --no-cache-dir -U pip setuptools
+COPY requirements.txt .
+RUN .venv/bin/pip install --no-cache-dir -r requirements.txt
+RUN find /app/.venv \
+      \( -type d \( -name test -o -name tests \) -o -type f \( -name '*.pyc' -o -name '*.pyo' \) \) \
+      -exec rm -rf '{}' + 2>/dev/null || true
+# Stage 2 - Copy only necessary files to the runner stage
+FROM python:3.13-alpine
+RUN apk add --no-cache g++ jpeg-dev zlib-dev libjpeg make
+WORKDIR /app
+COPY --from=builder /app /app
 COPY . .
-
-CMD ["python", "run.py"]
+ENV PATH="/app/.venv/bin:$PATH"
+CMD ["python", "/app/run.py"]

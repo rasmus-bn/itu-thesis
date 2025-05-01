@@ -172,3 +172,8 @@ cython_debug/
 
 # Idea
 .idea/
+
+# docker stuff
+*.sif
+*.pkl
+output/

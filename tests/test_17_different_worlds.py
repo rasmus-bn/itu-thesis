@@ -14,6 +14,48 @@ import pygad
 from datetime import datetime
 
 
+all_fitness_per_gen = []
+def plot_it(filename=None):
+    # Calculate Statistics
+    generations = range(len(all_fitness_per_gen))
+    best_fitness_per_gen = [max(fitnesses) for fitnesses in all_fitness_per_gen]
+    avg_fitness_per_gen = [sum(fitnesses) / len(fitnesses) for fitnesses in all_fitness_per_gen]
+    overall_best_fitness = []
+    current_overall_best = float('-inf')
+    for best in best_fitness_per_gen:
+        current_overall_best = max(current_overall_best, best)
+        overall_best_fitness.append(current_overall_best)
+
+    # Plotting
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
+    ax.boxplot(all_fitness_per_gen, positions=generations, widths=0.6, patch_artist=True, showfliers=False)
+    ax.plot(generations, best_fitness_per_gen, label='Best Fitness', marker='o')
+    ax.plot(generations, overall_best_fitness, label='Overall Best', linestyle='--')
+    ax.plot(generations, avg_fitness_per_gen, label='Average')
+    ax.scatter(
+        [gen for gen in generations for _ in all_fitness_per_gen[gen]],
+        [fitness for gen_fitness in all_fitness_per_gen for fitness in gen_fitness],
+        color='red', s=5, alpha=0.6, zorder=2, label='Individual Fitness'
+    )
+
+    ax.set_title("Generational Fitness Overview")
+    ax.set_xlabel("Generation")
+    ax.set_ylabel("Fitness")
+    ax.legend()
+
+    if filename:
+        plt.savefig(filename)
+    else:
+        plt.show()
+
+
+def on_generation(ga_instance):
+    all_fitness_per_gen.append(ga_instance.last_generation_fitness.copy())
+    print(f"Generation = {ga_instance.generations_completed}")
+    print(f"Best Fitness = {ga_instance.best_solution()}")
+
+
 @dataclass
 class WorldParams:
     id: int
@@ -100,7 +142,7 @@ def fitness_func(instance: pygad.GA, solution, solution_idx):
 
     # Running simulation
     TIME_LIMIT = 60
-    REALTIME_AND_DISPLAY = True
+    REALTIME_AND_DISPLAY = False
     counters = simulation(solution, SCREEN_SIZE, caption, REALTIME_AND_DISPLAY, TIME_LIMIT, params)
     collected_resources = counters.get("collected_resources", 0)
     completed_time = counters.get("finished_early_time", TIME_LIMIT)
@@ -111,11 +153,6 @@ def fitness_func(instance: pygad.GA, solution, solution_idx):
     return fitness
 
 
-def on_generation(ga_instance):
-    print(f"Generation = {ga_instance.generations_completed}")
-    print(f"Best Fitness = {ga_instance.best_solution()}")
-
-
 def run_ga(params: WorldParams):
     gene_space = [
         {'low': MIN_AGENT_COUNT, 'high': MAX_AGENT_COUNT, 'step': 1},  # Agent Count
@@ -123,7 +160,7 @@ def run_ga(params: WorldParams):
     ]
 
     ga_instance = pygad.GA(
-        num_generations=50,
+        num_generations=20,
         num_parents_mating=6,
         fitness_func=fitness_func,
         sol_per_pop=30,
@@ -133,34 +170,68 @@ def run_ga(params: WorldParams):
         mutation_num_genes=1,
         crossover_type="uniform",
         keep_parents=5,
-        parallel_processing=['process', 8],
+        parallel_processing=['process', 30],
         on_generation=on_generation
     )
+
+    #TEST
+    # ga_instance = pygad.GA(
+    #     num_generations=1,
+    #     num_parents_mating=1,
+    #     fitness_func=fitness_func,
+    #     sol_per_pop=2,
+    #     num_genes=2,
+    #     gene_space=gene_space,
+    #     mutation_type="random",
+    #     mutation_num_genes=1,
+    #     crossover_type="uniform",
+    #     keep_parents=1,
+    #     parallel_processing=['process', 16],
+    #     on_generation=on_generation
+    # )
 
     ga_instance.params = params
 
     # RUN the GA process
     ga_instance.run()
 
-    # Plot fitness after the run
-    ga_instance.plot_fitness()
+    # Save instance
+    world_id = params.id
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"ga_instance_world{world_id}_{timestamp}"
+    filename_fit = f"ga_instance_world_{world_id}_{timestamp}_fit"
+    ga_instance.save(filename)
+
+    # Save Plot
+    plot_it(filename_fit)
+    ga_instance.plot_fitness(save_dir=filename)
+
+    # Print Best
     solution, solution_fitness, _ = ga_instance.best_solution()
     print("Best solution:", solution)
     print("Best fitness (score):", solution_fitness)
 
-    world_id = params.id
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f"ga_instance_world{world_id}_{timestamp}"
-    ga_instance.save(filename)
+
+# def run():
+#     worldParams = WORLDS[2]
+#     run_ga(worldParams)
+#     # print("Test 19: Evaluating different worlds")
+#     # for worldParams in WORLDS:
+#     #     run_ga(worldParams)
+#     #     # print(f"testing world: {str(worldParams.id)} Resource Count:{worldParams.resource_count} Resource Size:{worldParams.resource_radius}");
+#     #     # simulation([4, 0.25], (300, 300), "test_14_pygad_multi", True, 10, worldParams)
+
+#     # # worldParams = WORLDS[2]
+#     # # print(f"testing world: {str(worldParams.id)} Resource Count:{worldParams.resource_count} Resource Size:{worldParams.resource_radius}");
+#     # # simulation([1, 0.25], (300, 300), "test_14_pygad_multi", True, 10, worldParams)
 
 
-if __name__ == "__main__":
-    # print("Test 19: Evaluating different worlds")
+def run():
     for worldParams in WORLDS:
         run_ga(worldParams)
-        # print(f"testing world: {str(worldParams.id)} Resource Count:{worldParams.resource_count} Resource Size:{worldParams.resource_radius}");
-        # simulation([4, 0.25], (300, 300), "test_14_pygad_multi", True, 10, worldParams)
+    #     # print(f"testing world: {str(worldParams.id)} Resource Count:{worldParams.resource_count} Resource Size:{worldParams.resource_radius}");
+    #     # simulation([4, 0.25], (300, 300), "test_14_pygad_multi", True, 10, worldParams)
 
-    # worldParams = WORLDS[2]
-    # print(f"testing world: {str(worldParams.id)} Resource Count:{worldParams.resource_count} Resource Size:{worldParams.resource_radius}");
-    # simulation([1, 0.25], (300, 300), "test_14_pygad_multi", True, 10, worldParams)
+    # # worldParams = WORLDS[2]
+    # # print(f"testing world: {str(worldParams.id)} Resource Count:{worldParams.resource_count} Resource Size:{worldParams.resource_radius}");
+    # # simulation([1, 0.25], (300, 300), "test_14_pygad_multi", True, 10, worldParams)
