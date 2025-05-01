@@ -36,7 +36,7 @@ def run_ga():
         mutation_by_replacement=True,
         mutation_percent_genes=100,
         keep_parents=0,
-        keep_elitism=1,
+        keep_elitism=0,
         on_generation=on_generation,
         random_mutation_min_val=-100,
         random_mutation_max_val=100,
@@ -53,6 +53,8 @@ def run_ga():
 
     solution, solution_fitness, _ = ga_instance.best_solution()
     print(f"Best solution: {solution} | Best fitness: {solution_fitness}")
+
+    ga_instance.save()
 
 
 def plot_it():
