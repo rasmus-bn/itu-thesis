@@ -5,10 +5,11 @@ from engine.objects import Circle, Box
 from engine.types import IWaypointData
 from typing import TYPE_CHECKING
 if TYPE_CHECKING: from engine.simulation import SimulationBase
+from random import Random
 
 
 class Environment:
-    def __init__(self, sim):
+    def __init__(self, sim, seed=None):
         self.waypoint_distance = None
         self.waypointData: list[IWaypointData] = []
         self.waypoints = None
@@ -18,6 +19,7 @@ class Environment:
         self.resources = []
         self.resources_generated_count = 0
         self.collected_count = 0
+        self._random = Random(seed) if seed is not None else Random()
 
         # Register collision handler for HomeBase (1) and Resource (2)
         handler = self.sim.space.add_collision_handler(1, 2)
@@ -33,8 +35,8 @@ class Environment:
         self.resources_generated_count = count
         self.resources = []
         for _ in range(count):
-            distance = random.randint(min_dist, max_dist)
-            angle = random.uniform(0, 2 * math.pi)
+            distance = self._random.randint(min_dist, max_dist)
+            angle = self._random.uniform(0, 2 * math.pi)
             x = distance * math.cos(angle)
             y = distance * math.sin(angle)
             resource = Resource(x, y, radius, color)
@@ -129,6 +131,9 @@ class Waypoint(Circle):
     def draw(self, surface):
         if self.visible:
             super().draw(surface)
+
+    def clone(self):
+        return Waypoint(x=self.body.position.x, y=self.body.position.y, radius=self.radius, color=self.color, homebase_position=(0, 0), homebase_threshold=50, visible=self.visible)
 
 
 class Resource(Circle):
