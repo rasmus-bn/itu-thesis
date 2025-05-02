@@ -1,3 +1,4 @@
 *.sif
 *.pkl
 output/
+*.png
