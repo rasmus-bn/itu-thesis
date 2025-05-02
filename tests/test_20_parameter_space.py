@@ -29,7 +29,7 @@ def simulation(colony_idx:int, robot_count:int, motor_ratio:float, screen_size:t
 
     for env_id in range(ENV_COUNT):
 
-        def run_sim():
+        def run_sim(e_id:int):
 
             # ENVIRONMENT
             sim = SimulationBase(
@@ -67,6 +67,8 @@ def simulation(colony_idx:int, robot_count:int, motor_ratio:float, screen_size:t
                 robot._comms_range = 300
                 robot._light_range = 300
                 sim.add_game_object(robot)
+
+            print(f"STARTING... Idx:{colony_idx}, Env:{e_id}, Robot Count:{robot_count}, Motor Ratio:{motor_ratio}")
             counters = sim.run()
 
 
@@ -77,7 +79,7 @@ def simulation(colony_idx:int, robot_count:int, motor_ratio:float, screen_size:t
             # Fitness Function
             fitness = time_limit / completed_time * collected_resources
 
-            results[f"{colony_idx}:{env_id}"] = {
+            results[f"{colony_idx}:{e_id}"] = {
                 "colony_idx": colony_idx,
                 "robot_count": robot_count,
                 "motor_ratio": motor_ratio,
@@ -86,9 +88,9 @@ def simulation(colony_idx:int, robot_count:int, motor_ratio:float, screen_size:t
                 "fitness": fitness,
                 "measurements": counters,
             }
-            print(f"Idx:{colony_idx}, Env:{env_id}, Fitness:{fitness}, Collected:{collected_resources}, Time:{completed_time}, Robot Count:{robot_count}, Motor Ratio:{motor_ratio}")
+            print(f"...FINISHED Idx:{colony_idx}, Env:{e_id}, Fitness:{fitness}, Collected:{collected_resources}, Time:{completed_time}, Robot Count:{robot_count}, Motor Ratio:{motor_ratio}")
         
-        processes.append(run_sim)
+        processes.append({"func":run_sim, "env_id":env_id})
 
     
 
@@ -105,7 +107,7 @@ def fitness_func(robot_count:int, motor_ratio:float, thread_count:int, colony_id
 
     # Running simulation
     TIME_LIMIT = 60
-    TIME_LIMIT = 5
+    TIME_LIMIT = 10
     REALTIME_AND_DISPLAY = False
     simulation(colony_idx=colony_idx, robot_count=robot_count, motor_ratio=motor_ratio, screen_size=SCREEN_SIZE, caption=caption, realtime_display=REALTIME_AND_DISPLAY, time_limit=TIME_LIMIT, results=results, processes=processes)
     # mean_measurements = {}
@@ -139,7 +141,7 @@ def run_parameter_search():
         agent_count_range.append(MAX_AGENT_COUNT)
 
     motor_ratio_resolution = 0.01
-    motor_ratio_resolution = 0.5
+    motor_ratio_resolution = .5
     motor_ratio_range = []
     motor_ratio_value = MIN_MOTOR_RATIO
     while motor_ratio_value <= MAX_MOTOR_RATIO:
@@ -151,7 +153,7 @@ def run_parameter_search():
     results = {}
 
     sim_idx = 0
-    thread_count = 16
+    thread_count = 8
 
     with ThreadPoolExecutor (max_workers=thread_count) as executor:
         processes = []
@@ -162,7 +164,8 @@ def run_parameter_search():
                 colony_idx.append(sim_idx)
                 sim_idx += 1
 
-        futures = [executor.submit(process) for process in processes]
+        print(f"Submitting {len(processes)} simulations to thread pool of {thread_count} workers.")
+        futures = [executor.submit(process["func"], process["env_id"]) for process in processes]
 
         for future in futures:
             future.result()
@@ -209,14 +212,14 @@ def run_parameter_search():
     #         sim_idx += 1
 
 
-    # NumPy 2D data frame
-    for idx, result in results.items():
-        (robot_count, motor_ratio, collected_resources, completed_time, fitness, measurements) = result.values()
-        row = int((robot_count - MIN_AGENT_COUNT) / agent_count_resolution)
-        col = int((motor_ratio - MIN_MOTOR_RATIO) / motor_ratio_resolution)
-        data[row][col] = fitness
-    print("Data Frame:")
-    print(data)
+    # # NumPy 2D data frame
+    # for idx, result in results.items():
+    #     (robot_count, motor_ratio, collected_resources, completed_time, fitness, measurements, colony_idx) = result.values()
+    #     row = int((robot_count - MIN_AGENT_COUNT) / agent_count_resolution)
+    #     col = int((motor_ratio - MIN_MOTOR_RATIO) / motor_ratio_resolution)
+    #     data[row][col] = fitness
+    # print("Data Frame:")
+    # print(data)
     
     
 
