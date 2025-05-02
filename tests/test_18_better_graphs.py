@@ -7,7 +7,7 @@ from engine.environment import Environment
 from engine.robot import RobotBase
 from engine.robot_spec import RobotSpec
 from engine.simulation import SimulationBase
-from evolutionary.evolutionary_test_02 import COLONY_TOTAL_WEIGHT, get_single_robot, MIN_AGENT_COUNT, MAX_AGENT_COUNT, MIN_MOTOR_RATIO, MAX_MOTOR_RATIO
+from evolutionary.colony import COLONY_TOTAL_WEIGHT, get_single_robot, MIN_AGENT_COUNT, MAX_AGENT_COUNT, MIN_MOTOR_RATIO, MAX_MOTOR_RATIO
 from sim_math.units import Mass
 
 

@@ -14,9 +14,7 @@ def fitness_func(instance: pygad.GA, solution, solution_idx):
     return solution[0] + val
 
 
-def run_ga():
-    # datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f"pygad_world{0}"
+def run_ga(filename: str):
     plotter = Plotter(filename)
 
     gene_space = [
@@ -59,4 +57,4 @@ def run_ga():
 
 
 if __name__ == "__main__":
-    run_ga()
+    run_ga("test")

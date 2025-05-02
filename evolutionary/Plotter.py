@@ -200,19 +200,19 @@ class Plotter:
             plt.show()
 
     def plot_all(self):
-        self.plot_fitness(f"{self.filename}_fitness.png")
-        self.plot_genes(f"{self.filename}_genes.png")
-        self.plot_new_solutions(f"{self.filename}_solutions.png")
-        self.plot_best_solution(f"{self.filename}_best.png")
-        self.plot_final_generation_table(f"{self.filename}_table.png")
+        self.plot_fitness(f"{self.filename}_plot_fitness.png")
+        self.plot_genes(f"{self.filename}_plot_genes.png")
+        self.plot_new_solutions(f"{self.filename}_plot_solutions.png")
+        self.plot_best_solution(f"{self.filename}_plot_best.png")
+        self.plot_final_generation_table(f"{self.filename}_plot_table.png")
 
     def plot_all_default(self, ga_instance):
-        ga_instance.plot_fitness(save_dir=f"{self.filename}_pygad_fitness")
+        ga_instance.plot_fitness(save_dir=f"{self.filename}_plot_pygad_fitness")
         # ga_instance.plot_genes(save_dir=f"{self.filename}_pygad_genes")
         # ga_instance.plot_new_solution_rate(save_dir=f"{self.filename}_pygad_solutions")
 
     def save_all(self, ga_instance):
-        ga_instance.save(f"{self.filename}_pygad_instance")
+        ga_instance.save(f"{self.filename}_pickle_pygad_instance.pkl")
 
-        with open(f"{self.filename}_plots.pkl", "wb") as f:
+        with open(f"{self.filename}_pickle_plots.pkl", "wb") as f:
             pickle.dump(self, f)
