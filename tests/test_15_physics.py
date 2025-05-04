@@ -77,13 +77,13 @@ class ManualRobotBase(RobotBase):
                 else:
                     print(f"cannot attach: {obj}")
 
-        print(f"Robot speed: {self.speedometer.to_str(Speed.KM_H, 2)}")
+        # print(f"Robot speed: {self.speedometer.to_str(Speed.KM_H, 2)}")
         # if self.speedometer.km_h > 5:
         #     motor_left = 0
         #     motor_right = 0
         self.set_motor_values(motor_left, motor_right)
 
-        print(self.spec.get_spec_sheet())
+        # print(self.spec.get_spec_sheet())
 
 
 if __name__ == "__main__":
@@ -100,23 +100,24 @@ if __name__ == "__main__":
         meta=sim.meta,
         battery_mass=Mass.in_kg(100),
         motor_mass=Mass.in_kg(100),
+        other_materials_mass=Mass.in_kg(800)
     )
-    print(robot_spec.get_spec_sheet())
+    # print(robot_spec.get_spec_sheet())
 
     # Create manual robot 1 controlled by arrow keys
     manual_robot = ManualRobotBase(
         robot_spec=robot_spec,
         position=(0, 0),
     )
-    manual_robot.motor_l.print_math = True
+    # manual_robot.motor_l.print_math = True
     # manual_robot.motor_r._print_reasoning = True
 
     manual_robot.battery.draw_debugging = True
 
     # Hacks vv
-    manual_robot.battery.power_draw_scaler = 10  # Battery drains x times faster
-    motor_force_scaler = 5  # Motor force is x times stronger
-    manual_robot.motor_l.motor_force_scaler = motor_force_scaler
-    manual_robot.motor_r.motor_force_scaler = motor_force_scaler
+    # manual_robot.battery.power_draw_scaler = 10  # Battery drains x times faster
+    # motor_force_scaler = 5  # Motor force is x times stronger
+    # manual_robot.motor_l.motor_force_scaler = motor_force_scaler
+    # manual_robot.motor_r.motor_force_scaler = motor_force_scaler
 
     sim.run()

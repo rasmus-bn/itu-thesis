@@ -55,12 +55,20 @@ def simulation(solution, screen_size, caption, realtime_display, time_limit, wor
             position=(uniform(-1, 1) * 2, uniform(-1, 1) * 2),
             angle=0,
             controller=controller,
-            ignore_battery=True,
+            ignore_battery=False,
             robot_collision=False,
             debug_color=Colors.get_random_color(),
         )
         robot._comms_range = 300
         robot._light_range = 300
+
+        # Battery
+        power_draw_scaler = 8     # Battery drains x times faster
+        motor_force_scaler = 0.2  # Motor force is x times stronger
+        robot.battery.power_draw_scaler = power_draw_scaler  
+        robot.motor_l.motor_force_scaler = motor_force_scaler
+        robot.motor_r.motor_force_scaler = motor_force_scaler
+
         sim.add_game_object(robot)
     counters = sim.run()
     return counters
@@ -135,6 +143,7 @@ def run_ga(params: WorldParams, filename: str, test=None):
 
     # inject parameters into pygad instance
     ga_instance.params = params
+    ga_instance.summary()
 
     # run ga
     ga_instance.run()
@@ -158,6 +167,7 @@ if __name__ == "__main__":
 
 
 def run(filename: str, test=None):
+    print("Running different worlds..")
     for worldParams in WORLDS:
         new_filename = f"{filename}_world_{worldParams.id}"
         run_ga(worldParams, new_filename, test)

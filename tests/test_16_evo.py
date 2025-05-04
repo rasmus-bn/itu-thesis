@@ -52,12 +52,23 @@ def simulation(solution, screen_size, caption, realtime_display, time_limit) -> 
             position=(uniform(-1, 1) * 2, uniform(-1, 1) * 2),
             angle=0,
             controller=controller,
-            ignore_battery=True,
+            ignore_battery=False,
             robot_collision=False,
             debug_color=Colors.get_random_color(),
         )
         robot._comms_range = 300
         robot._light_range = 300
+        
+
+        # Hacks vv
+        # robot.battery.draw_debugging = True
+        power_draw_scaler = 8     # Battery drains x times faster
+        motor_force_scaler = 0.2  # Motor force is x times stronger
+        robot.battery.power_draw_scaler = power_draw_scaler  
+        robot.motor_l.motor_force_scaler = motor_force_scaler
+        robot.motor_r.motor_force_scaler = motor_force_scaler
+
+
         sim.add_game_object(robot)
     counters = sim.run()
     return counters
@@ -126,5 +137,5 @@ def run_ga():
 
 if __name__ == "__main__":
     # Fitness = (array([81., 0.4016737]), np.float64(51.87319884726225), np.int64(0))
-    # simulation([71, 0.2], (300, 300), "test_14_pygad_multi", True, 60)
-    run_ga()
+    simulation([100, 0.2], (300, 300), "test_14_pygad_multi", True, 60)
+    # run_ga()
