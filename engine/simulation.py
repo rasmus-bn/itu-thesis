@@ -11,6 +11,7 @@ from engine.tether import Tether
 from engine.environment import Environment
 from engine.objects import IGameObject
 from sim_math.world_meta import WorldMeta
+import os
 
 
 @dataclass
@@ -124,6 +125,12 @@ class SimulationBase:
                     simulation_time = self.frame_count / self.fps
                     if simulation_time >= self.time_limit_seconds:
                         self.physics_thread = False
+
+                # check realtime 
+                # run_time = time() - self.start_time
+                # if run_time > 600: # 10 minutes
+                #     os._exit(1)
+
 
         physics_thread = threading.Thread(target=run_physics)
         physics_thread.start()
