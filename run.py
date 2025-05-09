@@ -40,12 +40,12 @@ if __name__ == '__main__':
         multiprocessing.set_start_method('spawn')
 
     # run_ga_test_19(arg_filename)
-    run_many_worlds(arg_filename, test=arg_extra_1)
-    # core_count = os.cpu_count()
-    # print(f"cores: {core_count}")
-    # world_id = int(arg_extra_1)
-    # print(f"world_id: {world_id}")
-    # run_parameter_search(arg_filename, core_count, world_id)
+    # run_many_worlds(arg_filename, test=arg_extra_1)
+
+    core_count = os.cpu_count()
+    world_id = int(arg_extra_1)
+    print(f"world_id: {world_id}")
+    run_parameter_search(arg_filename, core_count, world_id)
    
 
 

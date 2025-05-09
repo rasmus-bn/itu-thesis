@@ -16,6 +16,9 @@ param_space = [
 MOTOR_RATIO_RESOLUTION = 0.02
 AGENT_RATIO_RESOLUTION = 2
 
+# MOTOR_RATIO_RESOLUTION = 0.5
+# AGENT_RATIO_RESOLUTION = 50
+
 def evaluate(solution, world_id: int, test = None):
     print(f"Start Solution:[{solution[0]}, {solution[1]}]", flush=True)
     start_time = time.time()
