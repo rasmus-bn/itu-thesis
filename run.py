@@ -1,8 +1,9 @@
 if __name__ == '__main__':
     import os
-    from tests.test_19_pygad_example import run_ga as run_ga_test_19
-    from tests.test_17_different_worlds import run as run_many_worlds
-    from tests.test_20_parameter_search import run as run_parameter_search
+    # from tests.test_19_pygad_example import run_ga as run_ga_test_19
+    # from tests.test_17_different_worlds import run as run_many_worlds
+    # from tests.test_20_parameter_search import run as run_parameter_search
+    from tests.test_21_multiple_roles import run_ga as run_multiple_roles
     import multiprocessing
     import sys
     from datetime import datetime
@@ -44,9 +45,10 @@ if __name__ == '__main__':
 
     core_count = os.cpu_count()
     world_id = int(arg_extra_1)
-    print(f"world_id: {world_id}")
-    run_parameter_search(arg_filename, core_count, world_id)
-   
+
+    run_multiple_roles(filename=arg_filename, thread_count=core_count, world_id=world_id, test="test1")
+    # run_parameter_search(arg_filename, core_count, world_id)
+
 
 
 

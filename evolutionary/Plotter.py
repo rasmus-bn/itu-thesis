@@ -75,7 +75,7 @@ class Plotter:
             for gen_idx, pop in enumerate(self.all_genes_per_gen):
                 xs.extend([gen_idx] * pop.shape[0])
                 ys.extend(pop[:, gene_idx])
-            axs[gene_idx].scatter(xs, ys, alpha=0.7, s=25)
+            axs[gene_idx].scatter(xs, ys, alpha=0.1, s=100)
             axs[gene_idx].set_title(f"Gene {gene_idx} Values Over Generations")
             axs[gene_idx].set_ylabel("Gene Value")
 
@@ -175,12 +175,13 @@ class Plotter:
 
         # Transpose table data
         column_labels = [f"#{i}" for i in range(len(combined))]
-        row_labels = ["Gene 0", "Gene 1", "Fitness"]
+        num_genes = combined[0][0].shape[0]
+        row_labels = [f"Gene {i}" for i in range(num_genes)] + ["Fitness"]
         table_data = [
-            [f"{combined[i][0][0]:.2f}" for i in range(len(combined))],  # Gene 0
-            [f"{combined[i][0][1]:.2f}" for i in range(len(combined))],  # Gene 1
-            [f"{combined[i][1]:.2f}" for i in range(len(combined))],  # Fitness
+            [f"{combined[i][0][gene_idx]:.2f}" for i in range(len(combined))]
+            for gene_idx in range(num_genes)
         ]
+        table_data.append([f"{combined[i][1]:.2f}" for i in range(len(combined))])
 
         # Plot table
         fig, ax = plt.subplots(figsize=(24, 8))
