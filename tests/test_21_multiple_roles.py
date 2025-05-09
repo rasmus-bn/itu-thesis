@@ -155,7 +155,7 @@ def run_ga(filename:str = "test", thread_count=16, world_id: int = 0, test=None)
             num_parents_mating=1,
             fitness_func=fitness_func,
             sol_per_pop=2,
-            num_genes=2,
+            num_genes=5,
             gene_space=gene_space,
             mutation_type="random",
             mutation_num_genes=1,

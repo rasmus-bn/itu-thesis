@@ -46,7 +46,7 @@ if __name__ == '__main__':
     core_count = os.cpu_count()
     world_id = int(arg_extra_1)
 
-    run_multiple_roles(filename=arg_filename, thread_count=core_count, world_id=world_id, test="test1")
+    run_multiple_roles(filename=arg_filename, thread_count=core_count, world_id=world_id, test=arg_extra_2)
     # run_parameter_search(arg_filename, core_count, world_id)
 
 
