@@ -2,6 +2,8 @@ if __name__ == '__main__':
     import os
     from tests.test_19_pygad_example import run_ga as run_ga_test_19
     from tests.test_17_different_worlds import run as run_many_worlds
+    from tests.test_20_parameter_space import run as run_parameter_search
+
     import multiprocessing
     import sys
     from datetime import datetime
