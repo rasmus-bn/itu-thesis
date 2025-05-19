@@ -96,11 +96,17 @@ def fitness_func(instance: pygad.GA, solution, solution_idx):
 
     # Fitness Function
     fitness = TIME_LIMIT / completed_time * collected_resources
-    print(f"G{generations_completed}I{solution_idx} Fitness:{fitness} Collected:{collected_resources} Time:{completed_time} Solution:[{str(solution[0])}, {str(solution[1])}]")
+    print(f"G{generations_completed}I{solution_idx} Fitness:{fitness} Collected:{collected_resources} Time:{completed_time} Solution:[{str(solution[0])}, {str(solution[1])}]", flush=True)
     return fitness
 
 
-def run_ga(params: WorldParams, filename: str, test=None):
+def run_ga(filename:str = "test", thread_count=16, world_id: int = 0, test=None):
+    filename = f"{filename}_world{world_id}"
+    print(f"Running pygad with no roles, filename: {filename}, thread count: {thread_count} world_id: {world_id} test: {test}")
+    params = WORLDS[world_id]
+    plotter = Plotter(filename)
+
+
     plotter = Plotter(filename)
 
     gene_space = [
@@ -120,23 +126,28 @@ def run_ga(params: WorldParams, filename: str, test=None):
             mutation_num_genes=1,
             crossover_type="uniform",
             keep_parents=1,
-            parallel_processing=['process', 16],
+            parallel_processing=['process', thread_count],
             on_generation=plotter.on_generation,
             on_parents=plotter.on_parents,
         )
     else:
         ga_instance = pygad.GA(
-            num_generations=15,
-            num_parents_mating=6,
+            num_generations=20,
+            num_parents_mating=12,
             fitness_func=fitness_func,
-            sol_per_pop=30,
+            sol_per_pop=40,
             num_genes=2,
             gene_space=gene_space,
             mutation_type="random",
             mutation_num_genes=1,
+            mutation_probability=0.2,
             crossover_type="uniform",
-            keep_parents=5,
-            parallel_processing=['process', 30],
+            keep_parents=0,
+            keep_elitism=0,
+            save_solutions=False,
+            save_best_solutions=False,
+            parent_selection_type="rank",
+            parallel_processing=['process', thread_count],
             on_generation=plotter.on_generation,
             on_parents=plotter.on_parents,
         )
@@ -166,8 +177,8 @@ if __name__ == "__main__":
         # simulation([4, 0.25], (300, 300), "test_14_pygad_multi", True, 10, worldParams)
 
 
-def run(filename: str, test=None):
-    print("Running different worlds..")
-    for worldParams in WORLDS:
-        new_filename = f"{filename}_world_{worldParams.id}"
-        run_ga(worldParams, new_filename, test)
+# def run_all(filename: str, test=None):
+#     print("Running different worlds..")
+#     for worldParams in WORLDS:
+#         new_filename = f"{filename}_world_{worldParams.id}"
+#         run_ga(worldParams, new_filename, test)
