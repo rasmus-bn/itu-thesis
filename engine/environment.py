@@ -145,6 +145,6 @@ class Resource(Circle):
 
 
 class HomeBase(Box):
-    def __init__(self, x, y, width=200, length=200, color=(80, 80, 80)):
+    def __init__(self, x, y, width=200, length=200, color=(200, 200, 200)):
         super().__init__(x=x, y=y, width=width, length=length, color=color, trigger=True)
         self.shape.collision_type = 1  # Set collision type for homebase

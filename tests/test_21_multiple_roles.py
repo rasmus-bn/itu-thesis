@@ -55,14 +55,14 @@ def simulation(solution, screen_size, caption, realtime_display, time_limit, wor
         pixels_y=screen_size[1],
         enable_realtime=realtime_display,
         enable_display=realtime_display,
-        initial_zoom=0.06,
+        initial_zoom=0.5,
         time_limit_seconds=time_limit,
         inputs=solution,
         windows_caption=caption
     )
     env = Environment(sim)
-    env.generate_waypoints(distance=100, x_count=31, y_count=31, homebase_threshold=80, visible=True)
-    env.generate_resources(count=world.resource_count, radius=world.resource_radius, min_dist=world.min_dist, max_dist=world.max_dist)
+    env.generate_waypoints(distance=100, x_count=31, y_count=31, homebase_threshold=80, visible=False)
+    env.generate_resources(count=world.resource_count, radius=world.resource_radius, min_dist=world.min_dist, max_dist=world.max_dist, color=(0,180,0))
 
     def add_many_robots(robot_count, motor_mass, battery_mass, other_materials_mass, color):
         for i in range(robot_count):
@@ -86,6 +86,7 @@ def simulation(solution, screen_size, caption, realtime_display, time_limit, wor
             )
             robot._comms_range = 300
             robot._light_range = 300
+            # robot.battery.draw_debugging = True
 
             # Battery
             power_draw_scaler = 8     # Battery drains x times faster
@@ -201,28 +202,38 @@ def run_ga(filename:str = "test", thread_count=16, world_id: int = 0, test=None)
 
 
 if __name__ == "__main__":
-    for gen in range(10):
-        print("Test 21: Evaluating colonies with different roles")
-        worldParams = WORLDS[0]
+    print("Test 21: Evaluating colonies with different roles")
 
-        # colony_agent_count range both included 3-100
-        # role_a_count_ratio 0.0 - 1.0 both included ( already constrained by 1 robot per role requirement )
-        # role_a_mass_ratio 0.01 - 0.99 both included ( 0.0 or 1.0 would make a role to have robot(s) with 0 weight )
-        # role_a_motor_weight_ratio 0.01 - 0.99 both included ( 0.0 or 1.0 would make a robot without a batter or a motor )
-        # role_b_motor_weight_ratio - same as role_a_motor_weight_ratio
 
-        sol = [0.5, 0.0, 0.01, 0.2, 0.2]  # colony_agent_count, role_a_count_ratio, role_a_mass_ratio, role_a_motor_weight_ratio, role_b_motor_weight_ratio
+    # colony_agent_count range both included 3-100
+    # role_a_count_ratio 0.0 - 1.0 both included ( already constrained by 1 robot per role requirement )
+    # role_a_mass_ratio 0.01 - 0.99 both included ( 0.0 or 1.0 would make a role to have robot(s) with 0 weight )
+    # role_a_motor_weight_ratio 0.01 - 0.99 both included ( 0.0 or 1.0 would make a robot without a batter or a motor )
+    # role_b_motor_weight_ratio - same as role_a_motor_weight_ratio
 
-        # Running simulation
-        TIME_LIMIT = 60
-        REALTIME_AND_DISPLAY = False
-        counters = simulation(sol, (300, 300), "test_21", REALTIME_AND_DISPLAY, TIME_LIMIT, worldParams)
-        collected_resources = counters.get("collected_resources", 0)
-        completed_time = counters.get("finished_early_time", TIME_LIMIT)
+    # don't forget to change the world up
+    # sol = [0.5, 0.0, 0.01, 0.2, 0.2]  # colony_agent_count, role_a_count_ratio, role_a_mass_ratio, role_a_motor_weight_ratio, role_b_motor_weight_ratio
+    WORLD_ID = 4
+    worldParams = WORLDS[WORLD_ID]
+    sols = [
+        [0.445, 0.019, 0.851, 0.142, 0.105],
+        [0.952, 0.142, 0.526, 0.304, 0.165],
+        [0.801, 0.251, 0.503, 0.634, 0.429],
+        [0.818, 0.612, 0.847, 0.435, 0.952],
+        [0.916, 0.685, 0.836, 0.204, 0.106],
+    ]
+    sol = sols[WORLD_ID]
 
-        # Fitness Function
-        fitness = TIME_LIMIT / completed_time * collected_resources
-        print(f"Fitness:{fitness} Collected:{collected_resources} Time:{completed_time} Solution:[{sol}]")
+    # Running simulation
+    TIME_LIMIT = 60
+    REALTIME_AND_DISPLAY = True
+    counters = simulation(sol, (512, 512), "test_21", REALTIME_AND_DISPLAY, TIME_LIMIT, worldParams)
+    collected_resources = counters.get("collected_resources", 0)
+    completed_time = counters.get("finished_early_time", TIME_LIMIT)
+
+    # Fitness Function
+    fitness = TIME_LIMIT / completed_time * collected_resources
+    print(f"Fitness:{fitness} Collected:{collected_resources} Time:{completed_time} Solution:[{sol}]")
 
 
 # if __name__ == "__main__":

@@ -21,7 +21,7 @@ class SimulationBase:
     enable_realtime: bool = True
     pixels_x: int = 640
     pixels_y: int = 480
-    background_color: tuple = (20, 20, 20)
+    background_color: tuple = (240, 240, 240)
     frame_count: int = 0
     start_time: float = None
     last_time: float = None
@@ -197,7 +197,7 @@ class SimulationBase:
             # Draw camera position in lower-left corner
             font = pygame.font.SysFont(None, 20)
             cam_x, cam_y = self.meta.camera_offset
-            cam_text = font.render(f"Cam: ({int(cam_x)}, {int(cam_y)}) Zoom: {self.meta.camera_scale:.2f}", True, (200, 200, 200))
+            cam_text = font.render(f"Cam: ({int(cam_x)}, {int(cam_y)}) Zoom: {self.meta.camera_scale:.2f}", True, (150, 150, 150))
 
             text_rect = cam_text.get_rect()
             text_rect.bottomleft = (10, self._display.get_height() - 10)

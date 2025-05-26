@@ -217,3 +217,12 @@ class Plotter:
 
         with open(f"{self.filename}_pickle_plots.pkl", "wb") as f:
             pickle.dump(self, f)
+
+
+if __name__ == "__main__":
+    with open('/Users/janlishak/Downloads/filtered-output/job_50574_worlds_with_battery/job_50829_world_4_pickle_plots.pkl', 'rb') as f:
+        plotterRecovered = pickle.load(f)
+
+    newPlt = Plotter("test")
+    plotterRecovered.plot_new_solutions = newPlt.plot_new_solutions
+    plotterRecovered.plot_genes(f"new_genes/{plotterRecovered.filename}_plot_genes.png")

@@ -35,5 +35,5 @@ class Tether:
             color=(80, 80, 80),
             start_pos=self.robot.sim.meta.pymunk_to_pygame_point(self.robot.body.local_to_world(self.robot_offset), surface),
             end_pos=self.robot.sim.meta.pymunk_to_pygame_point(self.resource.body.local_to_world(self.resource_offset), surface),
-            width=3,
+            width=1,
         )

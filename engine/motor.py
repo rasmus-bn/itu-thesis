@@ -106,7 +106,7 @@ class DcMotor(IMotor):
         global_pos = self.body.local_to_world(self._wheel_pos_left)
         pygame.draw.circle(
             surface=surface,
-            color=(0, 0, 0),
+            color=(25, 25, 25),
             center=self.meta.pymunk_to_pygame_point(global_pos, surface),
             radius=self.meta.pymunk_to_pygame_scale(self._wheel_size),
         )

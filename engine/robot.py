@@ -384,7 +384,7 @@ class RobotBase(Circle):
         center_down = self.body.local_to_world((0, -1))
         pygame.draw.polygon(
             surface,
-            (0, 255, 0),
+            (40, 40, 40),
             [
                 self.sim.meta.pymunk_to_pygame_point(center_up, surface),
                 self.sim.meta.pymunk_to_pygame_point(center_down, surface),

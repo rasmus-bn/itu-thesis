@@ -32,14 +32,14 @@ def simulation(solution, screen_size, caption, realtime_display, time_limit, wor
         pixels_y=screen_size[1],
         enable_realtime=realtime_display,
         enable_display=realtime_display,
-        initial_zoom=0.06,
+        initial_zoom=0.5,
         time_limit_seconds=time_limit,
         inputs=solution,
         windows_caption=caption
     )
     env = Environment(sim)
-    env.generate_waypoints(distance=100, x_count=31, y_count=31, homebase_threshold=80, visible=True)
-    env.generate_resources(count=world.resource_count, radius=world.resource_radius, min_dist=world.min_dist, max_dist=world.max_dist)
+    env.generate_waypoints(distance=100, x_count=31, y_count=31, homebase_threshold=80, visible=False)
+    env.generate_resources(count=world.resource_count, radius=world.resource_radius, min_dist=world.min_dist, max_dist=world.max_dist, color=(0, 180, 0))
     for i in range(robot_count):
         controller = RandomRecruitController()
         robot_spec = RobotSpec(
@@ -57,7 +57,7 @@ def simulation(solution, screen_size, caption, realtime_display, time_limit, wor
             controller=controller,
             ignore_battery=False,
             robot_collision=False,
-            debug_color=Colors.get_random_color(),
+            # debug_color=Colors.get_random_color(),
         )
         robot._comms_range = 300
         robot._light_range = 300
@@ -174,7 +174,17 @@ if __name__ == "__main__":
         # worldParams = WORLDS[2]
         # run_ga(worldParams)
         # print(f"testing world: {str(worldParams.id)} Resource Count:{worldParams.resource_count} Resource Size:{worldParams.resource_radius}");
-        # simulation([4, 0.25], (300, 300), "test_14_pygad_multi", True, 10, worldParams)
+        WORLD_ID = 4
+        worldParams = WORLDS[WORLD_ID]
+        sols = [
+            [50.0, 0.2],
+            [98.0, 0.268],
+            [38.0, 0.635],
+            [32.0, 0.764],
+            [83.0, 0.2],
+        ]
+        sol = sols[WORLD_ID]
+        simulation(sol, (512, 512), "test_17_different_worlds", True, 60, worldParams)
 
 
 # def run_all(filename: str, test=None):
