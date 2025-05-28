@@ -44,9 +44,13 @@ def simulation(solution, screen_size, caption, realtime_display, time_limit, wor
     role_b_battery_mass = Mass.in_kg(role_b_agent_battery_weight)
     role_b_other_materials_mass = Mass.in_kg(role_b_other_materials_weight)
 
-    print(f"Role A: {role_a_robot_count} robots, Mot:{role_a_agent_motor_weight}, Bat:{role_a_agent_battery_weight}, Other:{role_a_other_materials_weight} Role Weight: {role_a_weight}")
-    print(f"Role B: {role_b_robot_count} robots, Mot:{role_b_agent_motor_weight}, Bat:{role_b_agent_battery_weight}, Other:{role_b_other_materials_weight} Role Weight: {role_b_weight}")
+    # print(f"Role A: {role_a_robot_count} robots, Mot:{role_a_agent_motor_weight}, Bat:{role_a_agent_battery_weight}, Other:{role_a_other_materials_weight} Role Weight: {role_a_weight}")
+    # print(f"Role B: {role_b_robot_count} robots, Mot:{role_b_agent_motor_weight}, Bat:{role_b_agent_battery_weight}, Other:{role_b_other_materials_weight} Role Weight: {role_b_weight}")
 
+    # print(f"Role A:\n\tRobot Count:  {role_a_robot_count}\n\tRobot Weight: {role_a_weight/role_a_robot_count:.2f}kg\n\tMotor Ratio:  {role_a_motor_ratio:.2f}")
+    # print(f"Role B:\n\tRobot Count:  {role_b_robot_count}\n\tRobot Weight: {role_b_weight/role_b_robot_count:.2f}kg\n\tMotor Ratio:  {role_b_motor_ratio:.2f}")
+
+    # return {}  # SKIP SKIP SKIP
     # ENVIRONMENT
     RESOURCES_COUNT = world.resource_count
     RESOURCES_SIZE = world.resource_radius
@@ -202,7 +206,7 @@ def run_ga(filename:str = "test", thread_count=16, world_id: int = 0, test=None)
 
 
 if __name__ == "__main__":
-    print("Test 21: Evaluating colonies with different roles")
+    print("Test 21: Evaluating colonies with different roles\n")
 
 
     # colony_agent_count range both included 3-100
@@ -213,27 +217,33 @@ if __name__ == "__main__":
 
     # don't forget to change the world up
     # sol = [0.5, 0.0, 0.01, 0.2, 0.2]  # colony_agent_count, role_a_count_ratio, role_a_mass_ratio, role_a_motor_weight_ratio, role_b_motor_weight_ratio
-    WORLD_ID = 4
-    worldParams = WORLDS[WORLD_ID]
-    sols = [
-        [0.445, 0.019, 0.851, 0.142, 0.105],
-        [0.952, 0.142, 0.526, 0.304, 0.165],
-        [0.801, 0.251, 0.503, 0.634, 0.429],
-        [0.818, 0.612, 0.847, 0.435, 0.952],
-        [0.916, 0.685, 0.836, 0.204, 0.106],
-    ]
-    sol = sols[WORLD_ID]
+    WORLD_ID = 0
+    while WORLD_ID < 5:
+        worldParams = WORLDS[WORLD_ID]
+        sols = [
+            [0.445, 0.019, 0.851, 0.142, 0.105],
+            [0.952, 0.142, 0.526, 0.304, 0.165],
+            [0.801, 0.251, 0.503, 0.634, 0.429],
+            [0.818, 0.612, 0.847, 0.435, 0.952],
+            [0.916, 0.685, 0.836, 0.204, 0.106],
+        ]
+        sol = sols[WORLD_ID]
 
-    # Running simulation
-    TIME_LIMIT = 60
-    REALTIME_AND_DISPLAY = True
-    counters = simulation(sol, (512, 512), "test_21", REALTIME_AND_DISPLAY, TIME_LIMIT, worldParams)
-    collected_resources = counters.get("collected_resources", 0)
-    completed_time = counters.get("finished_early_time", TIME_LIMIT)
+        # print(f"### ### Environment Type {WORLD_ID} ### ### ")
+        # print(f"Fittest Genome: \n{sol}")
 
-    # Fitness Function
-    fitness = TIME_LIMIT / completed_time * collected_resources
-    print(f"Fitness:{fitness} Collected:{collected_resources} Time:{completed_time} Solution:[{sol}]")
+        # Running simulation
+        TIME_LIMIT = 60
+        REALTIME_AND_DISPLAY = True
+        counters = simulation(sol, (512, 512), "test_21", REALTIME_AND_DISPLAY, TIME_LIMIT, worldParams)
+        collected_resources = counters.get("collected_resources", 0)
+        completed_time = counters.get("finished_early_time", TIME_LIMIT)
+
+        # Fitness Function
+        fitness = TIME_LIMIT / completed_time * collected_resources
+        print(f"Fitness:{fitness} Collected:{collected_resources} Time:{completed_time} Solution:[{sol}]")
+        # WORLD_ID += 1
+        print()
 
 
 # if __name__ == "__main__":
