@@ -47,10 +47,10 @@ def simulation(solution, screen_size, caption, realtime_display, time_limit, wor
     # print(f"Role A: {role_a_robot_count} robots, Mot:{role_a_agent_motor_weight}, Bat:{role_a_agent_battery_weight}, Other:{role_a_other_materials_weight} Role Weight: {role_a_weight}")
     # print(f"Role B: {role_b_robot_count} robots, Mot:{role_b_agent_motor_weight}, Bat:{role_b_agent_battery_weight}, Other:{role_b_other_materials_weight} Role Weight: {role_b_weight}")
 
-    # print(f"Role A:\n\tRobot Count:  {role_a_robot_count}\n\tRobot Weight: {role_a_weight/role_a_robot_count:.2f}kg\n\tMotor Ratio:  {role_a_motor_ratio:.2f}")
-    # print(f"Role B:\n\tRobot Count:  {role_b_robot_count}\n\tRobot Weight: {role_b_weight/role_b_robot_count:.2f}kg\n\tMotor Ratio:  {role_b_motor_ratio:.2f}")
+    print(f"Role A:\n\tRobot Count:  {role_a_robot_count}\n\tRobot Weight: {role_a_weight/role_a_robot_count:.2f}kg\n\tMotor Ratio:  {role_a_motor_ratio:.2f}")
+    print(f"Role B:\n\tRobot Count:  {role_b_robot_count}\n\tRobot Weight: {role_b_weight/role_b_robot_count:.2f}kg\n\tMotor Ratio:  {role_b_motor_ratio:.2f}")
 
-    # return {}  # SKIP SKIP SKIP
+    return {}  # SKIP SKIP SKIP
     # ENVIRONMENT
     RESOURCES_COUNT = world.resource_count
     RESOURCES_SIZE = world.resource_radius
@@ -229,8 +229,8 @@ if __name__ == "__main__":
         ]
         sol = sols[WORLD_ID]
 
-        # print(f"### ### Environment Type {WORLD_ID} ### ### ")
-        # print(f"Fittest Genome: \n{sol}")
+        print(f"### ### Environment Type {WORLD_ID} ### ### ")
+        print(f"Fittest Genome: \n{sol}")
 
         # Running simulation
         TIME_LIMIT = 60
@@ -241,8 +241,8 @@ if __name__ == "__main__":
 
         # Fitness Function
         fitness = TIME_LIMIT / completed_time * collected_resources
-        print(f"Fitness:{fitness} Collected:{collected_resources} Time:{completed_time} Solution:[{sol}]")
-        # WORLD_ID += 1
+        # print(f"Fitness:{fitness} Collected:{collected_resources} Time:{completed_time} Solution:[{sol}]")
+        WORLD_ID += 1
         print()
 
 
