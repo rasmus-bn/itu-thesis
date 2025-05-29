@@ -44,8 +44,8 @@ def simulation(solution, screen_size, caption, realtime_display, time_limit, wor
     role_b_battery_mass = Mass.in_kg(role_b_agent_battery_weight)
     role_b_other_materials_mass = Mass.in_kg(role_b_other_materials_weight)
 
-    print(f"Role A: {role_a_robot_count} robots, Mot:{role_a_agent_motor_weight}, Bat:{role_a_agent_battery_weight}, Other:{role_a_other_materials_weight} Role Weight: {role_a_weight}")
-    print(f"Role B: {role_b_robot_count} robots, Mot:{role_b_agent_motor_weight}, Bat:{role_b_agent_battery_weight}, Other:{role_b_other_materials_weight} Role Weight: {role_b_weight}")
+    # print(f"Role A: {role_a_robot_count} robots, Mot:{role_a_agent_motor_weight}, Bat:{role_a_agent_battery_weight}, Other:{role_a_other_materials_weight} Role Weight: {role_a_weight}")
+    # print(f"Role B: {role_b_robot_count} robots, Mot:{role_b_agent_motor_weight}, Bat:{role_b_agent_battery_weight}, Other:{role_b_other_materials_weight} Role Weight: {role_b_weight}")
 
     # ENVIRONMENT
     RESOURCES_COUNT = world.resource_count
@@ -126,13 +126,13 @@ def fitness_func(instance: pygad.GA, solution, solution_idx):
 
     # Fitness Function
     fitness = TIME_LIMIT / completed_time * collected_resources
-    print(f"G{generations_completed}I{solution_idx} Fitness:{fitness} Collected:{collected_resources} Time:{completed_time} Solution:[{str(solution[0])}, {str(solution[1])}]")
+    print(f"G{generations_completed}I{solution_idx} Fitness:{fitness} Collected:{collected_resources} Time:{completed_time} Solution:{solution}", flush=True)
     return fitness
 
 
 def run_ga(filename:str = "test", thread_count=16, world_id: int = 0, test=None):
     filename = f"{filename}_world{world_id}"
-    print(f"Running pygad with 2 roles, filename: {filename}, thread count: {thread_count} world_id: {world_id} test: {test}")
+    print(f"Running pygad with 2 roles v2, filename: {filename}, thread count: {thread_count} world_id: {world_id} test: {test}")
     params = WORLDS[world_id]
     plotter = Plotter(filename)
 
@@ -168,17 +168,21 @@ def run_ga(filename:str = "test", thread_count=16, world_id: int = 0, test=None)
         )
     else:
         ga_instance = pygad.GA(
-            num_generations=30,
-            num_parents_mating=10,
+            num_generations=50,
+            num_parents_mating=50,
             fitness_func=fitness_func,
-            sol_per_pop=30,
+            sol_per_pop=120,
             num_genes=5,
             gene_space=gene_space,
             mutation_type="random",
-            mutation_num_genes=1,
-            mutation_probability=0.2,
+            mutation_num_genes=2,
+            mutation_probability=0.3,
             crossover_type="uniform",
-            keep_parents=6,
+            parent_selection_type="tournament",
+            K_tournament=3,
+            keep_parents=2,
+            random_mutation_min_val=-0.3,
+            random_mutation_max_val=0.3,
             parallel_processing=['process', thread_count],
             on_generation=plotter.on_generation,
             on_parents=plotter.on_parents,
@@ -234,10 +238,3 @@ if __name__ == "__main__":
     # Fitness Function
     fitness = TIME_LIMIT / completed_time * collected_resources
     print(f"Fitness:{fitness} Collected:{collected_resources} Time:{completed_time} Solution:[{sol}]")
-
-
-# if __name__ == "__main__":
-#     print("Testing different worlds for different roles..")
-#     for i in range(len(WORLDS)):
-#         new_filename = f"{filename}_world_{worldParams.id}"
-#         run_ga(worldParams, new_filename, test)
