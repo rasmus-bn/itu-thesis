@@ -13,7 +13,7 @@ from evolutionary.worlds import WORLDS
 from evolutionary.worlds import WorldParams
 
 
-def simulation(solution, screen_size, caption, realtime_display, time_limit, world: WorldParams) -> dict:
+def simulation(solution, screen_size, caption, realtime_display, time_limit, world: WorldParams, enable_role_a=True, enable_role_b=True) -> dict:
     agent_count = int(solution[0] * 100)  # from normalized 0-1 range to count e.g. 1.0 = 100
     role_a_count_ratio = solution[1]
     role_a_robot_count = int(agent_count * role_a_count_ratio)
@@ -97,8 +97,10 @@ def simulation(solution, screen_size, caption, realtime_display, time_limit, wor
 
             sim.add_game_object(robot)
 
-    add_many_robots(role_a_robot_count, role_a_motor_mass, role_a_battery_mass, role_a_other_materials_mass, (0, 0, 255))
-    add_many_robots(role_b_robot_count, role_b_motor_mass, role_b_battery_mass, role_b_other_materials_mass, (255, 0, 0))
+    if enable_role_a:
+        add_many_robots(role_a_robot_count, role_a_motor_mass, role_a_battery_mass, role_a_other_materials_mass, (0, 0, 255))
+    if enable_role_b:
+        add_many_robots(role_b_robot_count, role_b_motor_mass, role_b_battery_mass, role_b_other_materials_mass, (255, 0, 0))
 
     counters = sim.run()
     return counters

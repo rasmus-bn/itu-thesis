@@ -13,6 +13,8 @@ class RunConfiguration:
     times: int
     sol: []
     name: str = None
+    enable_role_a: bool = True
+    enable_role_b: bool = True
 
 
 def evaluate(configuration: RunConfiguration):
@@ -22,11 +24,13 @@ def evaluate(configuration: RunConfiguration):
     SCREEN_SIZE = (512, 512)
     CAPTION = "Test24"
     SOL = configuration.sol
+    RA = configuration.enable_role_a
+    RB = configuration.enable_role_b
 
     if len(configuration.sol) == 2:
         counters = homogeneous_simulation(SOL, SCREEN_SIZE, CAPTION, REALTIME_AND_DISPLAY, TIME_LIMIT, ENV)
     elif len(configuration.sol) == 5:
-        counters = heterogeneous_simulation(SOL, SCREEN_SIZE, CAPTION, REALTIME_AND_DISPLAY, TIME_LIMIT, ENV)
+        counters = heterogeneous_simulation(SOL, SCREEN_SIZE, CAPTION, REALTIME_AND_DISPLAY, TIME_LIMIT, ENV, enable_role_a=RA, enable_role_b=RB)
     else:
         raise Exception("invalid configuration:", configuration)
 
@@ -35,7 +39,7 @@ def evaluate(configuration: RunConfiguration):
 
     # Fitness Function
     fitness = TIME_LIMIT / completed_time * collected_resources
-    print(f"Fitness:{fitness} Collected:{collected_resources} Time:{completed_time} Solution:[{SOL}]")
+    # print(f"Fitness:{fitness} Collected:{collected_resources} Time:{completed_time} Solution:[{SOL}]")
     return fitness
 
 
@@ -47,7 +51,7 @@ def worker(config, queue):
 def run(config: RunConfiguration, thread_count: int = None):
     if not thread_count:
         thread_count = os.cpu_count()
-    print(f"Starting {thread_count} threads...")
+    # print(f"Starting {thread_count} threads...")
     results = []
     queue = multiprocessing.Queue()
     total_processes = config.times
@@ -55,7 +59,7 @@ def run(config: RunConfiguration, thread_count: int = None):
     for i in range(0, total_processes, thread_count):
         processes = []
         for ii in range(min(thread_count, total_processes - i)):
-            print("starting", i, ii, i+ii)
+            # print("starting", i, ii, i+ii)
             p = multiprocessing.Process(target=worker, args=(config, queue))
             p.start()
             processes.append(p)
@@ -85,14 +89,6 @@ def print_results(fitness_values, conf):
     print(f"\tStandard deviation: {std_fitness:.2f}")
 
 
-if __name__ == '__main__':
-    print(f"Test 24\n")
-    # conf = RunConfiguration(worldId=0, times=5, sol=[50.0, 0.2])
-    conf = RunConfiguration(worldId=0, times=3, sol=[0.445, 0.019, 0.851, 0.142, 0.105])
-    result = run(conf)
-    print_results(result, conf)
-
-
 def test_all():
     print(f"Test 24 - run all solutions\n")
     TIMES = os.cpu_count() * 1
@@ -118,3 +114,26 @@ def test_all():
     for config in all_solutions:
         res = run(config)
         print_results(res, config)
+
+
+def test_without_role_a():
+    print(f"Test 24 - run all solutions\n")
+    TIMES = os.cpu_count() * 2
+
+    print(f"Run both roles:")
+    config = RunConfiguration(worldId=0, times=TIMES, sol=[0.889, 0.99, 0.209, 0.088, 0.185])
+    res = run(config)
+    print_results(res, config)
+
+    print(f"Run without roles B")
+    config = RunConfiguration(worldId=0, times=TIMES, sol=[0.889, 0.99, 0.209, 0.088, 0.185], enable_role_b=False)
+    res = run(config)
+    print_results(res, config)
+
+
+if __name__ == '__main__':
+    print(f"Test 24\n")
+    # conf = RunConfiguration(worldId=0, times=5, sol=[50.0, 0.2])
+    conf = RunConfiguration(worldId=0, times=3, sol=[0.445, 0.019, 0.851, 0.142, 0.105])
+    result = run(conf)
+    print_results(result, conf)

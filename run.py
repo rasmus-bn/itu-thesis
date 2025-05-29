@@ -1,11 +1,12 @@
-from tests.test_24_run_solutions import test_all
-
 if __name__ == '__main__':
     import os
     # from tests.test_19_pygad_example import run_ga as run_ga_test_19
     from tests.test_17_different_worlds import run_ga as run_many_worlds
     # from tests.test_20_parameter_search import run as run_parameter_search
     # from tests.test_21_multiple_roles import run_ga as run_multiple_roles
+    # from tests.test_24_run_solutions import test_all
+    from tests.test_24_run_solutions import test_without_role_a
+
     import multiprocessing
     import sys
     from datetime import datetime
@@ -51,7 +52,8 @@ if __name__ == '__main__':
     # run_multiple_roles(filename=arg_filename, thread_count=core_count, world_id=world_id, test=arg_extra_2)
     # run_parameter_search(arg_filename, core_count, world_id)
     # run_many_worlds(filename=arg_filename, thread_count=core_count, world_id=world_id, test=arg_extra_2)
-    test_all()
+    # test_all()
+    test_without_role_a()
 
 
 
