@@ -75,7 +75,7 @@ class Plotter:
             for gen_idx, pop in enumerate(self.all_genes_per_gen):
                 xs.extend([gen_idx] * pop.shape[0])
                 ys.extend(pop[:, gene_idx])
-            axs[gene_idx].scatter(xs, ys, alpha=0.1, s=100)
+            axs[gene_idx].scatter(xs, ys, alpha=0.07, s=100)
             axs[gene_idx].set_title(f"Gene {gene_idx} Values Over Generations")
             axs[gene_idx].set_ylabel("Gene Value")
 

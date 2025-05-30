@@ -15,6 +15,7 @@ pytest = "^8.3.5"
 termcolor = "^2.5.0"
 pygad = "^3.4.0"
 matplotlib = "3.7.0"
+scipy = "^1.15.3"
 
 [build-system]
 requires = ["poetry-core"]

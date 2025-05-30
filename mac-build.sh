@@ -13,5 +13,5 @@ docker run --rm \
   apptainer build --arch amd64 --force robots.sif oci-archive://robots.tar
 
 echo "[INFO] Copying to cluster"
-scp ./robots.sif jlis@hpc.itu.dk:/home/jlis/
+scp ./robots.sif jlis@hpc.itu.dk:/home/jlis/robots2.sif
 echo "[INFO] Done."

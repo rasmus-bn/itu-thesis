@@ -14,10 +14,19 @@ from evolutionary.Plotter import Plotter
 from evolutionary.worlds import WORLDS
 from evolutionary.worlds import WorldParams
 
+
 def simulation(solution, screen_size, caption, realtime_display, time_limit, world: WorldParams) -> dict:
-    robot_count = int(solution[0])
+    robot_count = int(solution[0] * 100)
     motor_ratio = solution[1]
-    agent_motor_weight, agent_battery_weight, other_materials_weight = get_single_robot(COLONY_TOTAL_WEIGHT, robot_count, motor_ratio)
+
+    # 3 genes
+    if len(solution) == 3:
+        role_a_weight = solution[2] * COLONY_TOTAL_WEIGHT
+        agent_motor_weight, agent_battery_weight, other_materials_weight = get_single_robot(role_a_weight, robot_count, motor_ratio)
+
+    # 2 genes
+    else:
+        agent_motor_weight, agent_battery_weight, other_materials_weight = get_single_robot(COLONY_TOTAL_WEIGHT, robot_count, motor_ratio)
 
     # ROBOT
     motor_mass = Mass.in_kg(agent_motor_weight)
@@ -96,7 +105,7 @@ def fitness_func(instance: pygad.GA, solution, solution_idx):
 
     # Fitness Function
     fitness = TIME_LIMIT / completed_time * collected_resources
-    print(f"G{generations_completed}I{solution_idx} Fitness:{fitness} Collected:{collected_resources} Time:{completed_time} Solution:[{str(solution[0])}, {str(solution[1])}]", flush=True)
+    print(f"G{generations_completed}I{solution_idx} Fitness:{fitness} Collected:{collected_resources} Time:{completed_time} Solution:{solution}", flush=True)
     return fitness
 
 
@@ -106,47 +115,46 @@ def run_ga(filename:str = "test", thread_count=16, world_id: int = 0, test=None)
     params = WORLDS[world_id]
     plotter = Plotter(filename)
 
-
-    plotter = Plotter(filename)
-
     gene_space = [
-        {'low': MIN_AGENT_COUNT, 'high': MAX_AGENT_COUNT, 'step': 1},  # Agent Count
-        {'low': MIN_MOTOR_RATIO, 'high': MAX_MOTOR_RATIO}  # Motor Ratio
+        {'low': 0.03, 'high': 1.0},   # Agent Count
+        {'low': 0.01, 'high': 0.99},  # Motor Ratio
+        # {'low': 0.01, 'high': 1.0}    # Role A weight
     ]
 
     if test:
         ga_instance = pygad.GA(
-            num_generations=1,
-            num_parents_mating=1,
+            num_generations=30,
+            num_parents_mating=10,
             fitness_func=fitness_func,
-            sol_per_pop=2,
+            sol_per_pop=30,
             num_genes=2,
             gene_space=gene_space,
             mutation_type="random",
             mutation_num_genes=1,
+            mutation_probability=0.3,
             crossover_type="uniform",
-            keep_parents=1,
+            keep_parents=2,
             parallel_processing=['process', thread_count],
             on_generation=plotter.on_generation,
             on_parents=plotter.on_parents,
         )
     else:
         ga_instance = pygad.GA(
-            num_generations=20,
-            num_parents_mating=12,
+            num_generations=50,
+            num_parents_mating=50,
             fitness_func=fitness_func,
-            sol_per_pop=40,
-            num_genes=2,
+            sol_per_pop=120,
+            num_genes=3,
             gene_space=gene_space,
             mutation_type="random",
             mutation_num_genes=1,
-            mutation_probability=0.2,
+            mutation_probability=0.3,
             crossover_type="uniform",
-            keep_parents=0,
-            keep_elitism=0,
-            save_solutions=False,
-            save_best_solutions=False,
-            parent_selection_type="rank",
+            keep_parents=2,
+            parent_selection_type="tournament",
+            K_tournament=3,
+            random_mutation_min_val=-0.3,
+            random_mutation_max_val=0.3,
             parallel_processing=['process', thread_count],
             on_generation=plotter.on_generation,
             on_parents=plotter.on_parents,

@@ -27,7 +27,7 @@ def evaluate(configuration: RunConfiguration):
     RA = configuration.enable_role_a
     RB = configuration.enable_role_b
 
-    if len(configuration.sol) == 2:
+    if len(configuration.sol) == 3 or len(configuration.sol) == 2:
         counters = homogeneous_simulation(SOL, SCREEN_SIZE, CAPTION, REALTIME_AND_DISPLAY, TIME_LIMIT, ENV)
     elif len(configuration.sol) == 5:
         counters = heterogeneous_simulation(SOL, SCREEN_SIZE, CAPTION, REALTIME_AND_DISPLAY, TIME_LIMIT, ENV, enable_role_a=RA, enable_role_b=RB)
@@ -92,24 +92,42 @@ def print_results(fitness_values, conf):
 def test_all():
     print(f"Test 24 - run all solutions\n")
     TIMES = os.cpu_count() * 1
-    homogeneous_solutions = [
-        RunConfiguration(worldId=0, times=TIMES, sol=[50.0, 0.2]),
-        RunConfiguration(worldId=1, times=TIMES, sol=[98.0, 0.268]),
-        RunConfiguration(worldId=2, times=TIMES, sol=[38.0, 0.635]),
-        RunConfiguration(worldId=3, times=TIMES, sol=[32.0, 0.764]),
-        RunConfiguration(worldId=4, times=TIMES, sol=[83.0, 0.2]),
+
+    # homogeneous_solutions_old = [
+    #     RunConfiguration(worldId=0, times=TIMES, sol=[50.0/100, 0.2, 1.0]),
+    #     RunConfiguration(worldId=1, times=TIMES, sol=[98.0/100, 0.268, 1.0]),
+    #     RunConfiguration(worldId=2, times=TIMES, sol=[38.0/100, 0.635, 1.0]),
+    #     RunConfiguration(worldId=3, times=TIMES, sol=[32.0/100, 0.764, 1.0]),
+    #     RunConfiguration(worldId=4, times=TIMES, sol=[83.0/100, 0.2, 1.0]),
+    # ]
+
+    homogeneous_solutions_new = [
+        RunConfiguration(worldId=0, times=TIMES, sol=[0.803, 0.115]),
+        RunConfiguration(worldId=1, times=TIMES, sol=[0.867, 0.222]),
+        RunConfiguration(worldId=2, times=TIMES, sol=[0.774, 0.554]),
+        RunConfiguration(worldId=3, times=TIMES, sol=[0.912, 0.438]),
+        RunConfiguration(worldId=4, times=TIMES, sol=[0.999, 0.187]),
     ]
 
-    heterogeneous_solutions = [
-        RunConfiguration(worldId=0, times=TIMES, sol=[0.445, 0.019, 0.851, 0.142, 0.105]),
-        RunConfiguration(worldId=1, times=TIMES, sol=[0.952, 0.142, 0.526, 0.304, 0.165]),
-        RunConfiguration(worldId=2, times=TIMES, sol=[0.801, 0.251, 0.503, 0.634, 0.429]),
-        RunConfiguration(worldId=3, times=TIMES, sol=[0.818, 0.612, 0.847, 0.435, 0.952]),
-        RunConfiguration(worldId=4, times=TIMES, sol=[0.916, 0.685, 0.836, 0.204, 0.106]),
-        RunConfiguration(worldId=0, times=TIMES, sol=[0.889, 0.99, 0.209, 0.088, 0.185]),
+    homogeneous_solutions_3_genes = [
+        RunConfiguration(worldId=0, times=TIMES, sol=[0.81, 0.076, 0.194]),
+        RunConfiguration(worldId=1, times=TIMES, sol=[0.984, 0.109, 0.382]),
+        RunConfiguration(worldId=2, times=TIMES, sol=[0.687, 0.696, 0.273]),
+        RunConfiguration(worldId=3, times=TIMES, sol=[0.466, 0.34, 0.427]),
+        RunConfiguration(worldId=4, times=TIMES, sol=[0.864, 0.152, 0.632]),
     ]
 
-    all_solutions = homogeneous_solutions + heterogeneous_solutions
+    # heterogeneous_solutions = [
+    #     RunConfiguration(worldId=0, times=TIMES, sol=[0.445, 0.019, 0.851, 0.142, 0.105]),
+    #     RunConfiguration(worldId=1, times=TIMES, sol=[0.952, 0.142, 0.526, 0.304, 0.165]),
+    #     RunConfiguration(worldId=2, times=TIMES, sol=[0.801, 0.251, 0.503, 0.634, 0.429]),
+    #     RunConfiguration(worldId=3, times=TIMES, sol=[0.818, 0.612, 0.847, 0.435, 0.952]),
+    #     RunConfiguration(worldId=4, times=TIMES, sol=[0.916, 0.685, 0.836, 0.204, 0.106]),
+    #     RunConfiguration(worldId=0, times=TIMES, sol=[0.889, 0.99, 0.209, 0.088, 0.185]),
+    # ]
+
+    # all_solutions = homogeneous_solutions + heterogeneous_solutions
+    all_solutions = homogeneous_solutions_new + homogeneous_solutions_3_genes
 
     for config in all_solutions:
         res = run(config)
@@ -131,9 +149,24 @@ def test_without_role_a():
     print_results(res, config)
 
 
+def test_extra():
+    print(f"Test 24 - run extra solutions\n")
+    TIMES = os.cpu_count() * 1
+
+    extra = [
+        RunConfiguration(worldId=0, times=TIMES, sol=[0.51562171, 0.20669626]),
+    ]
+
+    all_solutions = extra
+
+    for config in all_solutions:
+        res = run(config)
+        print_results(res, config)
+
+
 if __name__ == '__main__':
     print(f"Test 24\n")
-    # conf = RunConfiguration(worldId=0, times=5, sol=[50.0, 0.2])
-    conf = RunConfiguration(worldId=0, times=3, sol=[0.445, 0.019, 0.851, 0.142, 0.105])
+    conf = RunConfiguration(worldId=0, times=16, sol=[50.0/100, 0.2, 1.0])
+    # conf = RunConfiguration(worldId=0, times=3, sol=[0.445, 0.019, 0.851, 0.142, 0.105])
     result = run(conf)
     print_results(result, conf)
