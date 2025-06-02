@@ -15,11 +15,12 @@ class RunConfiguration:
     name: str = None
     enable_role_a: bool = True
     enable_role_b: bool = True
+    realtime_and_display: bool = False
 
 
 def evaluate(configuration: RunConfiguration):
     TIME_LIMIT = 60
-    REALTIME_AND_DISPLAY = False
+    REALTIME_AND_DISPLAY = configuration.realtime_and_display
     ENV = WORLDS[configuration.worldId]
     SCREEN_SIZE = (512, 512)
     CAPTION = "Test24"
@@ -135,18 +136,51 @@ def test_all():
 
 
 def test_without_role_a():
-    print(f"Test 24 - run all solutions\n")
-    TIMES = os.cpu_count() * 2
+    print(f"Test 24 - with/without Role \n")
+    print("ok ok")
+    TIMES = 40
 
-    print(f"Run both roles:")
-    config = RunConfiguration(worldId=0, times=TIMES, sol=[0.889, 0.99, 0.209, 0.088, 0.185])
+    print(f"Run without roles A")
+    config = RunConfiguration(worldId=0, times=TIMES, sol=[0.445, 0.019, 0.851, 0.142, 0.105], enable_role_a=False)
     res = run(config)
     print_results(res, config)
 
-    print(f"Run without roles B")
-    config = RunConfiguration(worldId=0, times=TIMES, sol=[0.889, 0.99, 0.209, 0.088, 0.185], enable_role_b=False)
+    print(f"Run without roles A")
+    config = RunConfiguration(worldId=0, times=TIMES, sol=[0.445, 0.019, 0.851, 0.142, 0.105], enable_role_a=False)
     res = run(config)
     print_results(res, config)
+
+    print(f"Run without roles A")
+    config = RunConfiguration(worldId=0, times=TIMES, sol=[0.445, 0.019, 0.851, 0.142, 0.105], enable_role_a=False)
+    res = run(config)
+    print_results(res, config)
+
+    print(f"Run without roles A")
+    config = RunConfiguration(worldId=0, times=TIMES, sol=[0.445, 0.019, 0.851, 0.142, 0.105], enable_role_a=False)
+    res = run(config)
+    print_results(res, config)
+
+    print(f"Run without roles A")
+    config = RunConfiguration(worldId=0, times=TIMES, sol=[0.445, 0.019, 0.851, 0.142, 0.105], enable_role_a=False)
+    res = run(config)
+    print_results(res, config)
+
+    print(f"Run without roles A")
+    config = RunConfiguration(worldId=0, times=TIMES, sol=[0.445, 0.019, 0.851, 0.142, 0.105], enable_role_a=False)
+    res = run(config)
+    print_results(res, config)
+
+    # print(f"Run both roles:")
+    # config = RunConfiguration(worldId=0, times=TIMES, sol=[0.445, 0.019, 0.851, 0.142, 0.105])
+    # res = run(config)
+    # print_results(res, config)
+    #
+    # print(f"Just in case - run without roles B")
+    # config = RunConfiguration(worldId=0, times=TIMES, sol=[0.445, 0.019, 0.851, 0.142, 0.105], enable_role_b=False)
+    # res = run(config)
+    # print_results(res, config)
+
+
 
 
 def test_extra():
@@ -164,9 +198,24 @@ def test_extra():
         print_results(res, config)
 
 
+def test_homogeneous_solutions():
+    homogeneous_solutions_new = [
+        # RunConfiguration(worldId=0, times=1, sol=[0.516, 0.207], realtime_and_display=True),
+        # RunConfiguration(worldId=1, times=1, sol=[0.867, 0.222], realtime_and_display=True),
+        # RunConfiguration(worldId=2, times=1, sol=[0.774, 0.554], realtime_and_display=True),
+        # RunConfiguration(worldId=3, times=1, sol=[0.912, 0.438], realtime_and_display=True),
+        RunConfiguration(worldId=4, times=1, sol=[0.999, 0.187], realtime_and_display=True),
+    ]
+
+    for config in homogeneous_solutions_new:
+        run(config)
+
+
 if __name__ == '__main__':
-    print(f"Test 24\n")
-    conf = RunConfiguration(worldId=0, times=16, sol=[50.0/100, 0.2, 1.0])
-    # conf = RunConfiguration(worldId=0, times=3, sol=[0.445, 0.019, 0.851, 0.142, 0.105])
-    result = run(conf)
-    print_results(result, conf)
+    print("oi")
+    test_homogeneous_solutions()
+    # print(f"Test 24\n")
+    # conf = RunConfiguration(worldId=0, times=16, sol=[50.0/100, 0.2, 1.0])
+    # # conf = RunConfiguration(worldId=0, times=3, sol=[0.445, 0.019, 0.851, 0.142, 0.105])
+    # result = run(conf)
+    # print_results(result, conf)

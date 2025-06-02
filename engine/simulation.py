@@ -197,11 +197,21 @@ class SimulationBase:
             # Draw camera position in lower-left corner
             font = pygame.font.SysFont(None, 20)
             cam_x, cam_y = self.meta.camera_offset
-            cam_text = font.render(f"Cam: ({int(cam_x)}, {int(cam_y)}) Zoom: {self.meta.camera_scale:.2f}", True, (150, 150, 150))
 
+            cam_text = font.render(f"Cam: ({int(cam_x)}, {int(cam_y)}) Zoom: {self.meta.camera_scale:.2f}", True, (150, 150, 150))
             text_rect = cam_text.get_rect()
             text_rect.bottomleft = (10, self._display.get_height() - 10)
             self._display.blit(cam_text, text_rect)
+
+            if len(self.inputs) == 2:
+                # Draw solution
+                font2 = pygame.font.SysFont(None, 32)
+                lines = f"Genome: {self.inputs}\nAgent Count: {int(self.inputs[0]*100)}\nMotor ratio: {self.inputs[1]}".split('\n')
+                for i, line in enumerate(lines):
+                    sol_text = font2.render(line, True, (0, 0, 0))
+                    sol_text_rect = sol_text.get_rect()
+                    sol_text_rect.bottomleft = (10, 30 + i * 26)
+                    self._display.blit(sol_text, sol_text_rect)
 
     def _update_camera(self):
         keys = pygame.key.get_pressed()  # Get key states
